@@ -517,12 +517,12 @@
           width: 87px;
           height: 30px;
           cursor: pointer;
-          background: url('../../assets/images/input-btn-upload.png') no-repeat center center / 100%
+          background: url('../../assets/images/input-btn-updoc.png') no-repeat center center / 100%
             100%;
         }
         .btn-upload:hover {
-          background: url('../../assets/images/input-btn-upload-hover.png') no-repeat center
-            center / 100% 100%;
+          background: url('../../assets/images/input-btn-updoc-hover.png') no-repeat center center /
+            100% 100%;
         }
       }
     }
