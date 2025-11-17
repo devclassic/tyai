@@ -140,7 +140,7 @@
   const http = useAxios()
   const recorder = useRecorder()
 
-  const getKnowledges = async () => {
+  const getTypes = async () => {
     const res = await http.post('/api/types/all', { type: 'knowledge' })
     state.types = res.data.data
     if (state.types.length > 0) {
@@ -148,7 +148,7 @@
       state.currentTypeId = state.types[0].id
     }
   }
-  getKnowledges()
+  getTypes()
 
   const changeType = item => {
     state.token = item.key
@@ -196,7 +196,7 @@
 
   const handleTypeDelete = async id => {
     await http.post('/api/types/delete', { id })
-    getKnowledges()
+    getTypes()
   }
 
   const handleTypeOk = async () => {
@@ -216,7 +216,7 @@
         })
         break
     }
-    getKnowledges()
+    getTypes()
     hideTypeEditDialog()
     state.type = {
       name: '',
@@ -230,7 +230,7 @@
   }
 
   const refresh = () => {
-    getKnowledges()
+    getTypes()
     state.messages = []
     input.value = ''
   }

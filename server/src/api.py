@@ -82,6 +82,12 @@ async def chat(request: Request):
     body = await request.json()
     query = body.get("query")
     token = body.get("token")
+
+    if not token:
+        type = body.get("type")
+        if type == "doc":
+            token = os.getenv("DIFY_DOC_TOKEN")
+
     dify_base_api = os.getenv("DIFY_BASE_API")
     url = f"{dify_base_api}/chat-messages"
     headers = {
