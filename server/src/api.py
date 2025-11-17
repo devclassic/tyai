@@ -1,0 +1,103 @@
+from fastapi import APIRouter, Request, UploadFile, File
+import asyncio
+import cn2an
+import uuid
+import shutil
+from starlette.responses import StreamingResponse
+from .db import types
+import os
+import httpx
+from funasr import AutoModel
+
+router = APIRouter(prefix="/api")
+
+model = AutoModel(
+    disable_update=True,
+    model="models/funasr/paraformer-zh",
+    vad_model="models/funasr/fsmn-vad",
+    punc_model="models/funasr/ct-punc",
+    spk_model="models/funasr/cam++",
+)
+
+
+@router.post("/asr")
+async def asr(file: UploadFile = File()):
+    basepath = "public/uploads/asr/"
+    if not os.path.exists(basepath):
+        os.makedirs(basepath)
+    ext = os.path.splitext(file.filename)[1]
+    filename = basepath + str(uuid.uuid4()) + ext
+    with open(filename, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    res = await asyncio.to_thread(model.generate, filename)
+    res[0]["text"] = cn2an.transform(res[0]["text"])
+    res[0]["text"] = res[0]["text"].replace("幺", "1")
+    for item in res[0]["sentence_info"]:
+        item["text"] = cn2an.transform(item["text"])
+        item["text"] = item["text"].replace("幺", "1")
+    res[0]["url"] = filename.replace("public/", "/")
+    return {"success": True, "message": "语音识别成功", "data": res}
+
+
+@router.post("/types/all")
+async def get_types(request: Request):
+    body = await request.json()
+    type = body.get("type")
+    data = types.find(type=type)
+    return {"success": True, "message": "获取全部知识库类型成功", "data": list(data)}
+
+
+@router.post("/types/get")
+async def get_type(request: Request):
+    body = await request.json()
+    id = body.get("id")
+    data = types.find_one(id=id)
+    return {"success": True, "message": "获取知识库类型成功", "data": data}
+
+
+@router.post("/types/add")
+async def add_type(request: Request):
+    body = await request.json()
+    types.insert(body)
+    return {"success": True, "message": "添加知识库类型成功"}
+
+
+@router.post("/types/update")
+async def update_type(request: Request):
+    body = await request.json()
+    types.update(body, ["id"])
+    return {"success": True, "message": "更新知识库类型成功"}
+
+
+@router.post("/types/delete")
+async def delete_type(request: Request):
+    body = await request.json()
+    id = body.get("id")
+    types.delete(id=id)
+    return {"success": True, "message": "删除知识库类型成功"}
+
+
+@router.post("/chat")
+async def chat(request: Request):
+    body = await request.json()
+    query = body.get("query")
+    token = body.get("token")
+    dify_base_api = os.getenv("DIFY_BASE_API")
+    url = f"{dify_base_api}/chat-messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+    }
+    data = {
+        "user": "demo",
+        "inputs": {},
+        "query": query,
+        "response_mode": "streaming",
+    }
+
+    async def stream():
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream("POST", url, json=data, headers=headers) as res:
+                async for chunk in res.aiter_bytes():
+                    yield chunk
+
+    return StreamingResponse(stream(), media_type="text/event-stream")

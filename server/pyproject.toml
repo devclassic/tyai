@@ -1,0 +1,19 @@
+[project]
+name = "server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "cn2an>=0.5.23",
+    "dataset>=1.6.2",
+    "fastapi[standard]>=0.121.2",
+    "funasr>=1.2.7",
+    "httpx>=0.28.1",
+    "invoke>=2.2.1",
+    "modelscope>=1.31.0",
+    "pyinstaller>=6.16.0",
+    "python-dotenv>=1.2.1",
+    "torch>=2.9.1",
+    "torchaudio>=2.9.1",
+]
