@@ -520,6 +520,7 @@
       app-region: no-drag;
       .item {
         margin-top: 10px;
+        line-height: 1.5;
       }
       .item:first-child {
         margin-top: 0px;

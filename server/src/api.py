@@ -7,6 +7,7 @@ from starlette.responses import StreamingResponse
 from .db import types
 import os
 import httpx
+from typing import List
 from funasr import AutoModel
 
 router = APIRouter(prefix="/api")
@@ -77,27 +78,92 @@ async def delete_type(request: Request):
     return {"success": True, "message": "删除知识库类型成功"}
 
 
+@router.post("/upload")
+async def upimg(files: List[UploadFile] = File([])):
+    upfiles = []
+    basepath = "public/uploads/files/"
+    if not os.path.exists(basepath):
+        os.makedirs(basepath)
+    for file in files:
+        filename = basepath + file.filename
+        with open(filename, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+            upfiles.append(filename)
+    return {"success": True, "message": "上传文件成功", "data": upfiles}
+
+
 @router.post("/chat")
 async def chat(request: Request):
     body = await request.json()
     query = body.get("query")
+    upfiles = body.get("upfiles", [])
+    files = []
     token = body.get("token")
+
+    dify_base_api = os.getenv("DIFY_BASE_API")
 
     if not token:
         type = body.get("type")
         if type == "doc":
             token = os.getenv("DIFY_DOC_TOKEN")
-
-    dify_base_api = os.getenv("DIFY_BASE_API")
-    url = f"{dify_base_api}/chat-messages"
+        if type == "ocr":
+            token = os.getenv("DIFY_OCR_TOKEN")
+            url = f"{dify_base_api}/files/upload"
+            headers = {
+                "Authorization": f"Bearer {token}",
+            }
+            data = {"user": "demo"}
+            for path in upfiles:
+                with open(path, "rb") as f:
+                    async with httpx.AsyncClient(timeout=None) as client:
+                        res = await client.post(
+                            url,
+                            headers=headers,
+                            data=data,
+                            files={"file": (os.path.basename(path), f)},
+                        )
+                        id = res.json().get("id")
+                        files.append(
+                            {
+                                "type": "image",
+                                "transfer_method": "local_file",
+                                "upload_file_id": id,
+                            }
+                        )
+        if type == "docs":
+            token = os.getenv("DIFY_DOCS_TOKEN")
+            url = f"{dify_base_api}/files/upload"
+            headers = {
+                "Authorization": f"Bearer {token}",
+            }
+            data = {"user": "demo"}
+            for path in upfiles:
+                with open(path, "rb") as f:
+                    async with httpx.AsyncClient(timeout=None) as client:
+                        res = await client.post(
+                            url,
+                            headers=headers,
+                            data=data,
+                            files={"file": (os.path.basename(path), f)},
+                        )
+                        id = res.json().get("id")
+                        files.append(
+                            {
+                                "type": "document",
+                                "transfer_method": "local_file",
+                                "upload_file_id": id,
+                            }
+                        )
     headers = {
         "Authorization": f"Bearer {token}",
     }
+    url = f"{dify_base_api}/chat-messages"
     data = {
         "user": "demo",
         "inputs": {},
         "query": query,
         "response_mode": "streaming",
+        "files": files,
     }
 
     async def stream():
