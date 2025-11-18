@@ -144,14 +144,14 @@
     const res = await http.post('/api/types/all', { type: 'knowledge' })
     state.types = res.data.data
     if (state.types.length > 0) {
-      state.token = state.types[0].key
+      state.token = state.types[0].query
       state.currentTypeId = state.types[0].id
     }
   }
   getTypes()
 
   const changeType = item => {
-    state.token = item.key
+    state.token = item.query
     state.currentTypeId = item.id
   }
 
@@ -205,14 +205,14 @@
         await http.post('/api/types/add', {
           type: 'knowledge',
           name: state.type.name,
-          key: state.type.key,
+          query: state.type.key,
         })
         break
       case 'edit':
         await http.post('/api/types/update', {
           id: state.id,
           name: state.type.name,
-          key: state.type.key,
+          query: state.type.key,
         })
         break
     }
