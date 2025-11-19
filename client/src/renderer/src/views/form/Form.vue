@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="header">
-      <div class="title">端点科技</div>
+      <div class="title">{{ settingsStore.title }}</div>
       <div @click="state.showMneu = !state.showMneu" class="btn-type"></div>
       <div class="btn-custom"></div>
       <div class="btn-refresh"></div>
@@ -113,10 +113,13 @@
 
 <script setup>
   import { reactive, computed } from 'vue'
+  import { useSettingsStore } from '../../stores'
 
   const state = reactive({
     showMneu: false,
   })
+
+  const settingsStore = useSettingsStore()
 
   const headerHeight = computed(() => {
     return state.showMneu ? '160px' : '100px'

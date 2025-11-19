@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="header">
-      <div class="title">端点科技</div>
+      <div class="title">{{ settingsStore.title }}</div>
       <div @click="state.showMneu = !state.showMneu" class="btn-type"></div>
       <div @click="showTypesDialog" class="btn-custom"></div>
       <div @click="refresh" class="btn-refresh"></div>
@@ -114,6 +114,7 @@
   import { ElMessage } from 'element-plus'
   import { useAxios } from '../../hooks/useAxios'
   import { useRecorder } from '../../hooks/useRecorder'
+  import { useSettingsStore } from '../../stores'
 
   const state = reactive({
     id: '',
@@ -132,6 +133,8 @@
     recording: false,
     chatBoxRef: useTemplateRef('chatBox'),
   })
+
+  const settingsStore = useSettingsStore()
 
   const http = useAxios()
   const recorder = useRecorder()

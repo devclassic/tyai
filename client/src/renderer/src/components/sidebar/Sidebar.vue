@@ -58,10 +58,13 @@
     </div>
   </div>
 
-  <el-dialog v-model="state.showSettings" title="系统设置" width="500">
+  <el-dialog v-model="state.showSettings" title="系统设置" width="500" class="dialog">
     <el-form label-width="auto">
-      <el-form-item label="服务器地址">
-        <el-select v-model="state.base" placeholder="请选择服务器地址">
+      <el-form-item label="应用名称">
+        <el-input v-model="settingsStore.title" placeholder="请输入应用名称" />
+      </el-form-item>
+      <el-form-item label="服务地址">
+        <el-select v-model="settingsStore.base" placeholder="请选择服务地址">
           <el-option label="http://localhost:7800" value="http://localhost:7800" />
           <el-option label="http://client.eopint.ink" value="http://client.eopint.ink" />
         </el-select>
@@ -79,13 +82,17 @@
 <script setup>
   import { reactive, watchEffect } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import { ElDialog, ElForm, ElFormItem, ElSelect, ElOption } from 'element-plus'
+  import { ElDialog, ElForm, ElFormItem, ElSelect, ElOption, ElInput } from 'element-plus'
+  import { useSettingsStore } from '../../stores'
 
   const state = reactive({
     showItem2: false,
     showSettings: false,
-    base: '',
   })
+
+  const settingsStore = useSettingsStore()
+  settingsStore.title = localStorage.getItem('title')
+  settingsStore.base = localStorage.getItem('base')
 
   const router = useRouter()
   const route = useRoute()
@@ -104,12 +111,12 @@
   }
 
   const showSettings = () => {
-    state.base = localStorage.getItem('base') || ''
     state.showSettings = true
   }
 
   const saveSettings = () => {
-    localStorage.setItem('base', state.base)
+    localStorage.setItem('title', settingsStore.title)
+    localStorage.setItem('base', settingsStore.base)
     state.showSettings = false
   }
 </script>
@@ -276,5 +283,9 @@
         border-radius: 0px 0px 5px 5px;
       }
     }
+  }
+
+  .dialog {
+    app-region: no-drag;
   }
 </style>
