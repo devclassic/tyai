@@ -7,11 +7,7 @@
       <div @click="refresh" class="btn-refresh"></div>
       <div v-show="state.showMneu" class="menu">
         <div class="menu-box">
-          <div
-            v-for="item in state.types"
-            @click="changeType(item)"
-            class="item"
-            :class="{ active: item.id === state.currentTypeId }">
+          <div v-for="item in state.types" @click="changeType(item)" class="item">
             <div class="icon"></div>
             <div class="text">{{ item.name }}</div>
           </div>
@@ -185,6 +181,7 @@
   const changeType = item => {
     state.input = item.query
     state.currentTypeId = item.id
+    ElMessage.success('设置成功')
   }
 
   const headerHeight = computed(() => {

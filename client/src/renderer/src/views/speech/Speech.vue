@@ -7,11 +7,7 @@
       <div @click="refresh" class="btn-refresh"></div>
       <div v-show="state.showMneu" class="menu">
         <div class="menu-box">
-          <div
-            v-for="item in state.types"
-            @click="changeType(item)"
-            class="item"
-            :class="{ active: item.id === state.currentTypeId }">
+          <div v-for="item in state.types" @click="changeType(item)" class="item">
             <div class="icon"></div>
             <div class="text">{{ item.name }}</div>
           </div>
@@ -54,59 +50,29 @@
           v-model="state.input"
           spellcheck="false"
           placeholder="请输入提示词"
+          @keydown="handleKeydown"
           class="input"></textarea>
         <div class="btns">
-          <div class="btn btn-send"></div>
+          <div @click="submit" class="btn btn-send"></div>
         </div>
       </div>
       <div class="right">
         <div class="header">
-          <div class="btn-rename"></div>
+          <div @click="showRenameDialog" class="btn-rename"></div>
         </div>
         <div class="list">
-          <div class="item">
-            <span>说话人0：</span>
-            你好？
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            你是谁，怎么回事？
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            我日你哥！
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            你好？
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            你是谁，怎么回事？
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            我日你哥！
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            你好？
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            你是谁，怎么回事？
-          </div>
-          <div class="item">
-            <span>说话人0：</span>
-            我日你哥！
+          <div v-for="item in state.conversations" class="item">
+            <span>{{ item.name }}：</span>
+            {{ item.content }}
           </div>
         </div>
         <div class="btns">
-          <div class="btn btn-upload"></div>
-          <div class="btn btn-record"></div>
-          <div class="btn btn-pause"></div>
-          <div class="btn btn-recover"></div>
-          <div class="btn btn-complete"></div>
+          <input ref="file" type="file" @change="handleFileChange" class="file" />
+          <div @click="state.fileRef.click()" class="btn btn-upload"></div>
+          <div @click="start" class="btn btn-record" :class="{ active: state.recording }"></div>
+          <div @click="pause" class="btn btn-pause" :class="{ active: state.pause }"></div>
+          <div @click="recover" class="btn btn-recover"></div>
+          <div @click="complete" class="btn btn-complete"></div>
         </div>
       </div>
     </div>
@@ -158,6 +124,20 @@
       <div @click="handleTypeOk" class="type-btn-ok"></div>
     </div>
   </div>
+
+  <div v-if="state.showRename" class="dialog-rename">
+    <div class="rename-header">
+      <div class="rename-title">命名说话人</div>
+    </div>
+    <div v-for="item in state.renames" class="item">
+      <div class="label">{{ item.name }}</div>
+      <input v-model="item.value" type="text" />
+    </div>
+    <div class="rename-footer">
+      <div @click="state.showRename = false" class="rename-btn-cancel"></div>
+      <div @click="handleRename" class="rename-btn-ok"></div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -175,6 +155,7 @@
     showMneu: false,
     showTypeList: false,
     showTypeEdit: false,
+    showRename: false,
     types: [],
     type: {
       name: '',
@@ -184,7 +165,12 @@
     input: '',
     currentTypeId: '',
     messages: [],
+    recording: false,
+    pause: false,
+    renames: [],
+    conversations: [],
     chatBoxRef: useTemplateRef('chatBox'),
+    fileRef: useTemplateRef('file'),
   })
 
   const http = useAxios()
@@ -199,6 +185,7 @@
   const changeType = item => {
     state.input = item.query
     state.currentTypeId = item.id
+    ElMessage.success('设置成功')
   }
 
   const headerHeight = computed(() => {
@@ -277,9 +264,7 @@
     getTypes()
     state.messages = []
     state.input = ''
-    state.upfiles = []
-    state.images = []
-    state.files = []
+    state.conversations = []
   }
 
   const copy = content => {
@@ -287,31 +272,89 @@
     ElMessage.success('复制成功')
   }
 
-  let recording = false
-  const asr = async () => {
-    if (!recording) {
-      recorder.start(
-        () => {
-          state.status = '正在收音...'
-          ElMessage.success('正在收音...')
-          recording = true
-        },
-        () => {
-          state.status = ''
-          ElMessage.error('收音失败')
-          recording = false
-        },
-      )
-    } else {
-      const res = await recorder.getResult()
-      state.input = res.data[0].text
-      state.status = ''
-      recording = false
+  const handleFileChange = async e => {
+    if (e.target.files.length === 0) {
+      return
     }
+    state.conversations = []
+    state.status = '音频处理中...'
+    ElMessage.success('音频处理中...')
+    const file = e.target.files[0]
+    const res = await recorder.getResult(file)
+    state.conversations = res.data[0].sentence_info.map(item => ({
+      name: `说话人${item.spk}`,
+      content: item.text,
+    }))
+    state.status = ''
+    ElMessage.success('音频处理完成')
+  }
+
+  const showRenameDialog = () => {
+    const names = [...new Set(state.conversations.map(item => item.name))]
+    state.renames = names.map(name => ({ name, value: name }))
+    state.showRename = true
+  }
+
+  const handleRename = () => {
+    state.conversations.forEach(item => {
+      item.name = state.renames.find(rename => rename.name === item.name).value
+    })
+    state.showRename = false
+  }
+
+  const start = async () => {
+    if (state.recording) {
+      ElMessage.error('请先停止当前录音')
+      return
+    }
+    recorder.start(
+      () => {
+        state.status = '正在收音...'
+        ElMessage.success('正在收音...')
+        state.recording = true
+        state.pause = false
+      },
+      () => {
+        state.status = ''
+        ElMessage.error('收音失败')
+        state.recording = false
+        state.pause = false
+      },
+    )
+  }
+
+  const pause = async () => {
+    recorder.pause
+    state.recording = false
+    state.pause = true
+  }
+
+  const recover = async () => {
+    recorder.resume()
+    state.recording = true
+    state.pause = false
+  }
+
+  const complete = async () => {
+    if (!state.recording) {
+      ElMessage.error('请先开始录音')
+      return
+    }
+    state.recording = false
+    state.pause = false
+    state.status = '正在处理录音...'
+    ElMessage.success('正在处理录音...')
+    const res = await recorder.getResult()
+    state.conversations = res.data[0].sentence_info.map(item => ({
+      name: `说话人${item.spk}`,
+      content: item.text,
+    }))
+    state.status = ''
   }
 
   const re = async (item, index) => {
-    const query = state.messages[index - 1].content
+    const conversationText = getConversationText()
+    const query = `${conversationText}\n${state.messages[index - 1].content}`
     let result = ''
     const base = localStorage.getItem('base')
     const url = `${base}/api/chat`
@@ -369,6 +412,11 @@
     }
   }
 
+  const getConversationText = () => {
+    const text = state.conversations.map(item => `${item.name}: ${item.content}`).join('\n')
+    return `<对话>\n${text}\n</对话>`
+  }
+
   const submit = async () => {
     if (!state.input) return
     state.messages.push({
@@ -382,29 +430,17 @@
     })
     state.messages.push(msg)
 
+    const conversationText = getConversationText()
+    const query = `${conversationText}\n${state.input}`
+
     const base = localStorage.getItem('base')
-    let url = `${base}/api/upload`
-
-    const formData = new FormData()
-    state.files.forEach(file => {
-      formData.append('files', file)
-    })
-    state.status = '文件上传中...'
-    const res = await http.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    state.status = '文件上传完成...'
-    state.upfiles = res.data.data
-
     let result = ''
-    url = `${base}/api/chat`
+    const url = `${base}/api/chat`
     const ctrl = new AbortController()
     await fetchEventSource(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: state.input, type: 'speech' }),
+      body: JSON.stringify({ query, type: 'speech' }),
       signal: ctrl.signal,
       async onopen(e) {
         if (e.ok) {
@@ -582,6 +618,7 @@
       app-region: no-drag;
       .item {
         margin-top: 10px;
+        line-height: 1.5;
       }
       .item:first-child {
         margin-top: 0px;
@@ -732,6 +769,11 @@
         display: flex;
         justify-content: end;
         margin-top: 10px;
+        .file {
+          width: 0;
+          height: 0;
+          opacity: 0;
+        }
         .btn {
           margin-left: 10px;
         }
@@ -753,7 +795,8 @@
           background: url('../../assets/images/input-btn-record.png') no-repeat center center / 100%
             100%;
         }
-        .btn-record:hover {
+        .btn-record:hover,
+        .btn-record.active {
           background: url('../../assets/images/input-btn-record-hover.png') no-repeat center
             center / 100% 100%;
         }
@@ -764,7 +807,8 @@
           background: url('../../assets/images/input-btn-pause.png') no-repeat center center / 100%
             100%;
         }
-        .btn-pause:hover {
+        .btn-pause:hover,
+        .btn-pause.active {
           background: url('../../assets/images/input-btn-pause-hover.png') no-repeat center center /
             100% 100%;
         }
@@ -984,6 +1028,73 @@
         margin-left: 10px;
       }
       .type-btn-ok:hover {
+        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+      }
+    }
+  }
+
+  .dialog-rename {
+    width: 350px;
+    background: #ffffff;
+    border: 1px solid #7f7f7f;
+    border-radius: 10px;
+    box-shadow: 0px 5px 5px -2px #7f7f7f;
+    padding: 0px 20px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .rename-header {
+      height: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .rename-title {
+        font-size: 16px;
+        color: #4a4459;
+      }
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      .label {
+        width: 60px;
+        font-size: 14px;
+        color: #4a4459;
+        margin-right: 10px;
+      }
+      input {
+        flex: 1;
+        height: 26px;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        outline: none;
+      }
+    }
+    .rename-footer {
+      display: flex;
+      justify-content: end;
+      align-items: center;
+      margin-bottom: 5px;
+      .rename-btn-cancel {
+        width: 65px;
+        height: 30px;
+        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        cursor: pointer;
+      }
+      .rename-btn-cancel:hover {
+        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
+          100%;
+      }
+      .rename-btn-ok {
+        width: 65px;
+        height: 30px;
+        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        cursor: pointer;
+        margin-left: 10px;
+      }
+      .rename-btn-ok:hover {
         background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
       }
     }

@@ -154,6 +154,9 @@ async def chat(request: Request):
                                 "upload_file_id": id,
                             }
                         )
+        if type == "speech":
+            token = os.getenv("DIFY_SPEECH_TOKEN")
+
     headers = {
         "Authorization": f"Bearer {token}",
     }
