@@ -1,6 +1,5 @@
 import { ipcMain, BrowserWindow, dialog, session, shell } from 'electron'
 import path from 'path'
-import open from 'open'
 
 const init = win => {
   ipcMain.on('minimize', () => {
