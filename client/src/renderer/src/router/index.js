@@ -13,4 +13,9 @@ const router = createRouter({
   ],
 })
 
+router.beforeEach((to, from, next) => {
+  speechSynthesis.cancel()
+  return next()
+})
+
 export default router

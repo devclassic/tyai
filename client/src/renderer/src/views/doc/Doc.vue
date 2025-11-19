@@ -221,8 +221,12 @@
   }
 
   const tts = content => {
-    const msg = new SpeechSynthesisUtterance(content)
-    window.speechSynthesis.speak(msg)
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel()
+    } else {
+      const msg = new SpeechSynthesisUtterance(content)
+      speechSynthesis.speak(msg)
+    }
   }
 
   const refresh = () => {
