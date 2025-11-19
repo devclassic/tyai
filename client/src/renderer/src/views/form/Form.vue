@@ -105,7 +105,7 @@
         <div class="btn btn-record"></div>
         <div class="btn btn-opt"></div>
         <div class="btn btn-upload"></div>
-        <div class="btn btn-download"></div>
+        <div @click="handleDownload" class="btn btn-download"></div>
       </div>
     </div>
   </div>
@@ -132,6 +132,10 @@
   const formHeight = computed(() => {
     return state.showMneu ? '390px' : '450px'
   })
+
+  const handleDownload = () => {
+    electron.ipcRenderer.send('download', 'https://www.baidu.com')
+  }
 </script>
 
 <style lang="scss" scoped>

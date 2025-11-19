@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import ipc from './ipc'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow() {
@@ -34,6 +35,7 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  return mainWindow
 }
 
 app.whenReady().then(() => {
@@ -43,15 +45,9 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.on('minimize', () => {
-    BrowserWindow.getFocusedWindow().minimize()
-  })
+  const win = createWindow()
 
-  ipcMain.on('close', () => {
-    BrowserWindow.getFocusedWindow().close()
-  })
-
-  createWindow()
+  ipc.init(win)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
