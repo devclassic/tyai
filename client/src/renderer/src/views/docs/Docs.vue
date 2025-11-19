@@ -57,7 +57,7 @@
           @keydown="handleKeydown"
           class="input"></textarea>
         <div class="btns">
-          <div @click="asr" class="btn btn-speech"></div>
+          <div @click="asr" class="btn btn-speech" :class="{ active: state.recording }"></div>
           <div @click="submit" class="btn btn-send"></div>
         </div>
       </div>
@@ -169,6 +169,7 @@
     images: [],
     files: [],
     upfiles: [],
+    recording: false,
     fileRef: useTemplateRef('file'),
   })
 
@@ -293,26 +294,26 @@
     ElMessage.success('复制成功')
   }
 
-  let recording = false
   const asr = async () => {
-    if (!recording) {
+    if (!state.recording) {
       recorder.start(
         () => {
           state.status = '正在收音...'
           ElMessage.success('正在收音...')
-          recording = true
+          state.recording = true
         },
         () => {
           state.status = ''
           ElMessage.error('收音失败')
-          recording = false
+          state.recording = false
         },
       )
     } else {
       const res = await recorder.getResult()
       state.input = res.data[0].text
+      ElMessage.success('停止收音...')
       state.status = ''
-      recording = false
+      state.recording = false
     }
   }
 
@@ -708,7 +709,8 @@
           background: url('../../assets/images/input-btn-speech.png') no-repeat center center / 100%
             100%;
         }
-        .btn-speech:hover {
+        .btn-speech:hover,
+        .btn-speech.active {
           background: url('../../assets/images/input-btn-speech-hover.png') no-repeat center
             center / 100% 100%;
         }

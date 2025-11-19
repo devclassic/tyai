@@ -36,20 +36,25 @@ export const useRecorder = () => {
       success()
       console.log('录音停止')
     },
+    play(success = () => {}) {
+      recorder.play()
+      success()
+      console.log('录音播放')
+    },
     getWAVBlob() {
       return recorder.getWAVBlob()
     },
     async getResult(audio = null) {
+      console.log('停止录音')
       let file = null
       if (audio) {
         file = audio
       } else {
-        const blob = this.getWAVBlob()
+        const blob = recorder.getWAVBlob()
         file = new File([blob], 'audio.wav')
       }
       const formData = new FormData()
       formData.append('file', file)
-      const http = useAxios()
       const res = await http.post('/api/asr', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
