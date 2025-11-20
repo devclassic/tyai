@@ -8,3 +8,13 @@ body {
   app-region: drag;
   user-select: none;
 }
+
+.chat-box table {
+  border-collapse: collapse;
+  width: 100%;
+  th,
+  td {
+    padding: 5px;
+    border: 1px solid #555555;
+  }
+}

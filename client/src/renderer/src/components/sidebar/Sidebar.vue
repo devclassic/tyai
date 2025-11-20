@@ -66,7 +66,7 @@
       <el-form-item label="服务地址">
         <el-select v-model="settingsStore.base" placeholder="请选择服务地址">
           <el-option label="http://localhost:7800" value="http://localhost:7800" />
-          <el-option label="http://client.eopint.ink" value="http://client.eopint.ink" />
+          <el-option label="https://client.epoint.ink" value="https://client.epoint.ink" />
         </el-select>
       </el-form-item>
     </el-form>
