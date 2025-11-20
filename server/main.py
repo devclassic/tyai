@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from src.api import router
 
 load_dotenv()
@@ -16,6 +17,8 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+app.mount("/", StaticFiles(directory="public"))
 
 if __name__ == "__main__":
     import multiprocessing

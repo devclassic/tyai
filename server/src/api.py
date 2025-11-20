@@ -4,11 +4,13 @@ import cn2an
 import uuid
 import shutil
 from starlette.responses import StreamingResponse
-from .db import types
+from .db import types, forms
 import os
 import httpx
 from typing import List
 from funasr import AutoModel
+from openpyxl import Workbook
+import uuid
 
 router = APIRouter(prefix="/api")
 
@@ -90,6 +92,26 @@ async def upimg(files: List[UploadFile] = File([])):
             shutil.copyfileobj(file.file, f)
             upfiles.append(filename)
     return {"success": True, "message": "上传文件成功", "data": upfiles}
+
+
+@router.post("/form")
+async def form_items(request: Request):
+    body = await request.json()
+    typeid = body.get("typeid", 0)
+    data = forms.find(typeid=typeid)
+    return {"success": True, "message": "获取表单项成功", "data": list(data)}
+
+
+@router.post("/form/save")
+async def handleAddFormItem(request: Request):
+    body = await request.json()
+    typeid = body.get("typeid", 0)
+    items = body.get("items", [])
+    forms.delete(typeid=typeid)
+    for item in items:
+        item["typeid"] = typeid
+        forms.insert(item)
+    return {"success": True, "message": "添加表单项成功"}
 
 
 @router.post("/chat")
@@ -176,3 +198,47 @@ async def chat(request: Request):
                     yield chunk
 
     return StreamingResponse(stream(), media_type="text/event-stream")
+
+
+@router.post("/chat2")
+async def json(request: Request):
+    body = await request.json()
+    query = body.get("query")
+    dify_base_api = os.getenv("DIFY_BASE_API")
+    token = os.getenv("DIFY_FORM_TOKEN")
+    url = f"{dify_base_api}/chat-messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+    }
+    data = {
+        "user": "demo",
+        "inputs": {},
+        "query": query,
+        "response_mode": "blocking",
+    }
+    async with httpx.AsyncClient(timeout=None) as client:
+        res = await client.post(url, json=data, headers=headers)
+    data = res.json().get("answer")
+    return {"success": True, "message": "获取响应成功", "data": data}
+
+
+@router.post("/export")
+async def export_data(request: Request):
+    body = await request.json()
+    items = body.get("items", [])
+
+    rows = []
+    for item in items:
+        rows.append([item.get("name", ""), item.get("value", "")])
+
+    wb = Workbook()
+    ws = wb.active
+    for r in rows:
+        ws.append(r)
+        
+    path = "public/uploads/exports"
+    os.makedirs(path, exist_ok=True)
+    filename = f"{path}/{uuid.uuid4()}.xlsx"
+    wb.save(filename)
+    url = filename.replace("public/", "/")
+    return {"success": True, "message": "导出数据成功", "data": url}

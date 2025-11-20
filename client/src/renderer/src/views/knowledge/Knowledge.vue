@@ -64,7 +64,7 @@
   </div>
   <div v-if="state.showTypeList" class="dialog-types">
     <div class="type-header">
-      <div class="type-title">自定义生成类型</div>
+      <div class="type-title">自定义类型</div>
       <div @click="showAddTypeDialog" class="type-btn-add"></div>
     </div>
     <div class="type-content">

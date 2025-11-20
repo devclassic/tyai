@@ -77,7 +77,7 @@
 
   <div v-if="state.showTypeList" class="dialog-types">
     <div class="type-header">
-      <div class="type-title">自定义生成类型</div>
+      <div class="type-title">自定义类型</div>
       <div @click="showAddTypeDialog" class="type-btn-add"></div>
     </div>
     <div class="type-content">
@@ -551,9 +551,9 @@
           background: #e4d9dd;
         }
         .icon {
-          width: 14px;
-          height: 14px;
-          background: url('../../assets/images/header-menu-icon-1.png') no-repeat center center /
+          width: 15px;
+          height: 18px;
+          background: url('../../assets/images/header-menu-icon-4.png') no-repeat center center /
             100% 100%;
         }
         .text {
