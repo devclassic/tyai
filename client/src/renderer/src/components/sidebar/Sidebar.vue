@@ -58,7 +58,7 @@
     </div>
   </div>
 
-  <el-dialog v-model="state.showSettings" title="系统设置" width="500" class="dialog">
+  <el-dialog v-model="state.showSettings" title="系统设置" width="500">
     <el-form label-width="auto">
       <el-form-item label="应用名称">
         <el-input v-model="settingsStore.title" placeholder="请输入应用名称" />
@@ -120,6 +120,12 @@
     state.showSettings = false
   }
 </script>
+
+<style lang="scss">
+  .el-dialog__headerbtn {
+    app-region: no-drag;
+  }
+</style>
 
 <style lang="scss" scoped>
   .sidebar {
@@ -283,9 +289,5 @@
         border-radius: 0px 0px 5px 5px;
       }
     }
-  }
-
-  .dialog {
-    app-region: no-drag;
   }
 </style>
