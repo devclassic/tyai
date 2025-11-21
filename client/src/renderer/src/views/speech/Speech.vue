@@ -330,7 +330,7 @@
   }
 
   const pause = async () => {
-    recorder.pause
+    recorder.pause()
     state.recording = false
     state.pause = true
   }
