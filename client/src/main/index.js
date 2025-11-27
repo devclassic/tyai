@@ -5,7 +5,7 @@ import Screenshots from 'electron-screenshots'
 import icon from '../../resources/icon.png?asset'
 
 // 创建主窗口
-export const createMainWindow = () => {
+const createMainWindow = () => {
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
@@ -42,7 +42,7 @@ export const createMainWindow = () => {
 }
 
 // 创建剪贴板窗口
-export const createClipboardWindow = () => {
+const createClipboardWindow = () => {
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
