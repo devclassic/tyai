@@ -236,7 +236,9 @@ app.whenReady().then(() => {
     },
     {
       label: '便携窗口（Alt+X）',
-      click: () => {},
+      click: () => {
+        showPortableWindow()
+      },
     },
     {
       label: '截图（Alt+Z）',
