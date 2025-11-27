@@ -228,24 +228,24 @@ app.whenReady().then(() => {
   // 系统托盘
   const menus = Menu.buildFromTemplate([
     {
-      label: '主窗口',
+      label: '主窗口（Alt+V）',
       click: () => {
         mainWindow.show()
         mainWindow.focus()
       },
     },
     {
-      label: '便携窗口',
+      label: '便携窗口（Alt+X）',
       click: () => {},
     },
     {
-      label: '截图',
+      label: '截图（Alt+Z）',
       click: () => {
         screenshots.startCapture()
       },
     },
     {
-      label: '灵犀版',
+      label: '灵犀版（Alt+C）',
       click: () => {
         showClipboardWindow()
       },
