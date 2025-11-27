@@ -83,7 +83,7 @@
   import { reactive, watchEffect } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { ElDialog, ElForm, ElFormItem, ElSelect, ElOption, ElInput } from 'element-plus'
-  import { useSettingsStore } from '../../stores'
+  import { useSettingsStore } from '@renderer/stores/main/settings'
 
   const state = reactive({
     showItem2: false,
@@ -168,42 +168,50 @@
         height: 16px;
         margin-left: 5px;
         &.icon-1 {
-          background: url('../../assets/images/menu-icon-1.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-1.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-2 {
-          background: url('../../assets/images/menu-icon-2.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-2.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-2-1 {
-          background: url('../../assets/images/menu-icon-2-1.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/menu-icon-2-1.png') no-repeat center center /
+            100% 100%;
         }
         &.icon-2-2 {
-          background: url('../../assets/images/menu-icon-2-2.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/menu-icon-2-2.png') no-repeat center center /
+            100% 100%;
         }
         &.icon-3 {
-          background: url('../../assets/images/menu-icon-3.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-3.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-4 {
-          background: url('../../assets/images/menu-icon-4.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-4.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-5 {
-          background: url('../../assets/images/menu-icon-5.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-5.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-6 {
-          background: url('../../assets/images/menu-icon-6.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-6.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-7 {
-          background: url('../../assets/images/menu-icon-7.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-7.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-8 {
-          background: url('../../assets/images/menu-icon-8.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/menu-icon-8.png') no-repeat center center / 100%
+            100%;
         }
         &.icon-down {
           width: 11px;
           height: 6px;
-          background: url('../../assets/images/menu-icon-down.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/menu-icon-down.png') no-repeat center center /
+            100% 100%;
         }
       }
       .text {
@@ -217,49 +225,49 @@
           background: #4e3d57;
         }
         & .icon-1 {
-          background: url('../../assets/images/menu-icon-1-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-1-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-2 {
-          background: url('../../assets/images/menu-icon-2-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-2-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-3 {
-          background: url('../../assets/images/menu-icon-3-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-3-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-4 {
-          background: url('../../assets/images/menu-icon-4-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-4-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-5 {
-          background: url('../../assets/images/menu-icon-5-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-5-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-6 {
-          background: url('../../assets/images/menu-icon-6-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-6-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-7 {
-          background: url('../../assets/images/menu-icon-7-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-7-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-8 {
-          background: url('../../assets/images/menu-icon-8-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-8-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-down {
           width: 11px;
           height: 6px;
-          background: url('../../assets/images/menu-icon-down-hover.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/menu-icon-down-hover.png') no-repeat center
+            center / 100% 100%;
         }
       }
       &.active-2 {
         background: #756882;
         border-radius: 5px 5px 0px 0px;
         & .icon-2 {
-          background: url('../../assets/images/menu-icon-2-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/menu-icon-2-hover.png') no-repeat center center /
             100% 100%;
         }
         & .text {
@@ -268,8 +276,8 @@
         & .icon-down {
           width: 11px;
           height: 6px;
-          background: url('../../assets/images/menu-icon-down-hover.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/menu-icon-down-hover.png') no-repeat center
+            center / 100% 100%;
         }
       }
       &.item-2 {

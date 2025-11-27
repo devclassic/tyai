@@ -16,7 +16,7 @@
     </div>
     <div class="content">
       <div class="content-header">
-        <div class="title">OCR识别</div>
+        <div class="title">多人语音</div>
         <div class="status"></div>
       </div>
       <div ref="chatBox" class="chat-box">
@@ -53,22 +53,26 @@
           @keydown="handleKeydown"
           class="input"></textarea>
         <div class="btns">
-          <div @click="asr" class="btn btn-speech" :class="{ active: state.recording }"></div>
           <div @click="submit" class="btn btn-send"></div>
         </div>
       </div>
       <div class="right">
-        <div class="header">图像上传</div>
+        <div class="header">
+          <div @click="showRenameDialog" class="btn-rename"></div>
+        </div>
         <div class="list">
-          <div class="list-box">
-            <div v-for="(item, i) in state.images" class="item">
-              <div @click="removeImage(i)" class="close"></div>
-              <img :src="item" />
-            </div>
+          <div v-for="item in state.conversations" class="item">
+            <span>{{ item.name }}：</span>
+            {{ item.content }}
           </div>
         </div>
         <div class="btns">
-          <div @click="state.showUpload = true" class="btn-upload"></div>
+          <input ref="file" type="file" @change="handleFileChange" class="file" />
+          <div @click="state.fileRef.click()" class="btn btn-upload"></div>
+          <div @click="start" class="btn btn-record" :class="{ active: state.recording }"></div>
+          <div @click="pause" class="btn btn-pause" :class="{ active: state.pause }"></div>
+          <div @click="recover" class="btn btn-recover"></div>
+          <div @click="complete" class="btn btn-complete"></div>
         </div>
       </div>
     </div>
@@ -121,16 +125,17 @@
     </div>
   </div>
 
-  <div v-if="state.showUpload" class="dialog-upload">
-    <input ref="file" type="file" accept="image/*" multiple @change="fileChange" class="file" />
-    <div class="upload-header">
-      <div class="upload-title">批量导入</div>
-      <div @click="state.fileRef.click()" class="btn-upload"></div>
+  <div v-if="state.showRename" class="dialog-rename">
+    <div class="rename-header">
+      <div class="rename-title">命名说话人</div>
     </div>
-    <div @dragover.prevent @drop="drop" class="area">将文件拖拽至此处，或点击上传按钮</div>
-    <div class="upload-footer">
-      <div @click="state.showUpload = false" class="upload-btn-cancel"></div>
-      <div @click="state.showUpload = false" class="upload-btn-ok"></div>
+    <div v-for="item in state.renames" class="item">
+      <div class="label">{{ item.name }}</div>
+      <input v-model="item.value" type="text" />
+    </div>
+    <div class="rename-footer">
+      <div @click="state.showRename = false" class="rename-btn-cancel"></div>
+      <div @click="handleRename" class="rename-btn-ok"></div>
     </div>
   </div>
 </template>
@@ -140,9 +145,9 @@
   import { fetchEventSource } from '@microsoft/fetch-event-source'
   import { marked } from 'marked'
   import { ElMessage } from 'element-plus'
-  import { useAxios } from '../../hooks/useAxios'
-  import { useRecorder } from '../../hooks/useRecorder'
-  import { useSettingsStore } from '../../stores'
+  import { useAxios } from '@renderer/hooks/useAxios'
+  import { useRecorder } from '@renderer/hooks/useRecorder'
+  import { useSettingsStore } from '@renderer/stores/main/settings'
 
   const state = reactive({
     showMneu: false,
@@ -151,7 +156,7 @@
     showMneu: false,
     showTypeList: false,
     showTypeEdit: false,
-    showUpload: false,
+    showRename: false,
     types: [],
     type: {
       name: '',
@@ -161,11 +166,11 @@
     input: '',
     currentTypeId: '',
     messages: [],
-    chatBoxRef: useTemplateRef('chatBox'),
-    images: [],
-    files: [],
-    upfiles: [],
     recording: false,
+    pause: false,
+    renames: [],
+    conversations: [],
+    chatBoxRef: useTemplateRef('chatBox'),
     fileRef: useTemplateRef('file'),
   })
   const settingsStore = useSettingsStore()
@@ -174,7 +179,7 @@
   const recorder = useRecorder()
 
   const getTypes = async () => {
-    const res = await http.post('/api/types/all', { type: 'ocr' })
+    const res = await http.post('/api/types/all', { type: 'speech' })
     state.types = res.data.data
   }
   getTypes()
@@ -192,27 +197,6 @@
   const contentHeight = computed(() => {
     return state.showMneu ? '350px' : '410px'
   })
-
-  const fileChange = e => {
-    state.files = Array.from(e.target.files)
-    state.images = state.files.map(file => {
-      return URL.createObjectURL(file)
-    })
-    state.showUpload = false
-  }
-  const removeImage = i => {
-    state.files.splice(i, 1)
-    state.images.splice(i, 1)
-  }
-
-  const drop = e => {
-    e.preventDefault()
-    state.files = Array.from(e.dataTransfer.files)
-    state.images = state.files.map(file => {
-      return URL.createObjectURL(file)
-    })
-    state.showUpload = false
-  }
 
   const showTypesDialog = () => {
     state.showTypeList = true
@@ -252,7 +236,7 @@
     switch (state.action) {
       case 'add':
         await http.post('/api/types/add', {
-          type: 'ocr',
+          type: 'speech',
           name: state.type.name,
           query: state.type.query,
         })
@@ -286,9 +270,7 @@
     getTypes()
     state.messages = []
     state.input = ''
-    state.upfiles = []
-    state.images = []
-    state.files = []
+    state.conversations = []
   }
 
   const copy = content => {
@@ -296,31 +278,93 @@
     ElMessage.success('复制成功')
   }
 
-  const asr = async () => {
-    if (!state.recording) {
-      recorder.start(
-        () => {
-          state.status = '正在收音...'
-          ElMessage.success('正在收音...')
-          state.recording = true
-        },
-        () => {
-          state.status = ''
-          ElMessage.error('收音失败')
-          state.recording = false
-        },
-      )
-    } else {
-      const res = await recorder.getResult()
-      state.input = res.data[0].text
-      ElMessage.success('停止收音...')
-      state.status = ''
-      state.recording = false
+  const handleFileChange = async e => {
+    if (e.target.files.length === 0) {
+      return
     }
+    state.conversations = []
+    state.status = '音频处理中...'
+    ElMessage.success('音频处理中...')
+    const file = e.target.files[0]
+    const res = await recorder.getResult(file)
+    state.conversations = res.data[0].sentence_info.map(item => ({
+      name: `说话人${item.spk}`,
+      content: item.text,
+    }))
+    state.status = ''
+    ElMessage.success('音频处理完成')
+  }
+
+  const showRenameDialog = () => {
+    const names = [...new Set(state.conversations.map(item => item.name))]
+    state.renames = names.map(name => ({ name, value: name }))
+    state.showRename = true
+  }
+
+  const handleRename = () => {
+    state.conversations.forEach(item => {
+      item.name = state.renames.find(rename => rename.name === item.name).value
+    })
+    state.showRename = false
+  }
+
+  const start = async () => {
+    if (state.recording) {
+      ElMessage.error('请先停止当前录音')
+      return
+    }
+    recorder.start(
+      () => {
+        state.status = '正在收音...'
+        ElMessage.success('正在收音...')
+        state.recording = true
+        state.pause = false
+      },
+      () => {
+        state.status = ''
+        ElMessage.error('收音失败')
+        state.recording = false
+        state.pause = false
+      },
+    )
+  }
+
+  const pause = async () => {
+    recorder.pause()
+    state.recording = false
+    state.pause = true
+  }
+
+  const recover = async () => {
+    recorder.resume()
+    state.recording = true
+    state.pause = false
+  }
+
+  const complete = async () => {
+    if (!state.recording) {
+      ElMessage.error('请先开始录音')
+      return
+    }
+    state.recording = false
+    state.pause = false
+    state.status = '正在处理录音...'
+    ElMessage.success('正在处理录音...')
+    const res = await recorder.getResult()
+    state.conversations = res.data[0].sentence_info.map(item => ({
+      name: `说话人${item.spk}`,
+      content: item.text,
+    }))
+    state.status = ''
+    const base = localStorage.getItem('base')
+    const url = `${base}${res.data[0].url}`
+    console.log(url)
+    electron.ipcRenderer.send('download', url)
   }
 
   const re = async (item, index) => {
-    const query = state.messages[index - 1].content
+    const conversationText = getConversationText()
+    const query = `${conversationText}\n${state.messages[index - 1].content}`
     let result = ''
     const base = localStorage.getItem('base')
     const url = `${base}/api/chat`
@@ -328,7 +372,7 @@
     await fetchEventSource(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query, type: 'ocr', upfiles: state.upfiles }),
+      body: JSON.stringify({ query: query, type: 'speech' }),
       signal: ctrl.signal,
       async onopen(e) {
         if (e.ok) {
@@ -378,6 +422,11 @@
     }
   }
 
+  const getConversationText = () => {
+    const text = state.conversations.map(item => `${item.name}: ${item.content}`).join('\n')
+    return `<对话>\n${text}\n</对话>`
+  }
+
   const submit = async () => {
     if (!state.input) return
     state.messages.push({
@@ -391,29 +440,17 @@
     })
     state.messages.push(msg)
 
+    const conversationText = getConversationText()
+    const query = `${conversationText}\n${state.input}`
+
     const base = localStorage.getItem('base')
-    let url = `${base}/api/upload`
-
-    const formData = new FormData()
-    state.files.forEach(file => {
-      formData.append('files', file)
-    })
-    state.status = '文件上传中...'
-    const res = await http.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    state.status = '文件上传完成...'
-    state.upfiles = res.data.data
-
     let result = ''
-    url = `${base}/api/chat`
+    const url = `${base}/api/chat`
     const ctrl = new AbortController()
     await fetchEventSource(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: state.input, type: 'ocr', upfiles: state.upfiles }),
+      body: JSON.stringify({ query, type: 'speech' }),
       signal: ctrl.signal,
       async onopen(e) {
         if (e.ok) {
@@ -470,7 +507,7 @@
       text-align: center;
       font-size: 45px;
       color: #625b71;
-      background: url('../../assets/images/header-title.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100% 100%;
       position: absolute;
       top: 5px;
       left: 50%;
@@ -479,7 +516,7 @@
     .btn-type {
       width: 90px;
       height: 27px;
-      background: url('../../assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -487,13 +524,13 @@
       left: 0px;
     }
     .btn-type:hover {
-      background: url('../../assets/images/header-btn-type-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-type-hover.png') no-repeat center center /
         100% 100%;
     }
     .btn-custom {
       width: 69px;
       height: 27px;
-      background: url('../../assets/images/header-btn-custom.png') no-repeat center center / 100%
+      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center / 100%
         100%;
       cursor: pointer;
       app-region: no-drag;
@@ -502,13 +539,13 @@
       left: 100px;
     }
     .btn-custom:hover {
-      background: url('../../assets/images/header-btn-custom-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center center /
         100% 100%;
     }
     .btn-refresh {
       width: 60px;
       height: 27px;
-      background: url('../../assets/images/header-btn-refresh.png') no-repeat center center / 100%
+      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center / 100%
         100%;
       cursor: pointer;
       app-region: no-drag;
@@ -517,7 +554,7 @@
       right: 0px;
     }
     .btn-refresh:hover {
-      background: url('../../assets/images/header-btn-refresh-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center center /
         100% 100%;
     }
     .menu {
@@ -549,9 +586,9 @@
           background: #e4d9dd;
         }
         .icon {
-          width: 15px;
-          height: 15px;
-          background: url('../../assets/images/header-menu-icon-3.png') no-repeat center center /
+          width: 19px;
+          height: 10px;
+          background: url('@renderer/assets/images/header-menu-icon-5.png') no-repeat center center /
             100% 100%;
         }
         .text {
@@ -604,7 +641,7 @@
         .avatar {
           width: 44px;
           height: 44px;
-          background: url('../../assets/images/avatar.png');
+          background: url('@renderer/assets/images/avatar.png');
         }
         .right {
           margin-left: 10px;
@@ -630,15 +667,15 @@
               cursor: pointer;
             }
             .tool1 {
-              background: url('../../assets/images/msg-icon-1.png') no-repeat center center / 100%
+              background: url('@renderer/assets/images/msg-icon-1.png') no-repeat center center / 100%
                 100%;
             }
             .tool2 {
-              background: url('../../assets/images/msg-icon-2.png') no-repeat center center / 100%
+              background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center / 100%
                 100%;
             }
             .tool3 {
-              background: url('../../assets/images/msg-icon-3.png') no-repeat center center / 100%
+              background: url('@renderer/assets/images/msg-icon-3.png') no-repeat center center / 100%
                 100%;
             }
           }
@@ -670,7 +707,7 @@
           cursor: pointer;
         }
         .tool2 {
-          background: url('../../assets/images/msg-icon-2.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center / 100% 100%;
         }
       }
     }
@@ -707,21 +744,12 @@
           margin-right: 10px;
           cursor: pointer;
         }
-        .btn-speech {
-          background: url('../../assets/images/input-btn-speech.png') no-repeat center center / 100%
-            100%;
-        }
-        .btn-speech:hover,
-        .btn-speech.active {
-          background: url('../../assets/images/input-btn-speech-hover.png') no-repeat center
-            center / 100% 100%;
-        }
         .btn-send {
-          background: url('../../assets/images/input-btn-send.png') no-repeat center center / 100%
+          background: url('@renderer/assets/images/input-btn-send.png') no-repeat center center / 100%
             100%;
         }
         .btn-send:hover {
-          background: url('../../assets/images/input-btn-send-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/input-btn-send-hover.png') no-repeat center center /
             100% 100%;
         }
       }
@@ -734,57 +762,108 @@
       box-shadow: 0px 5px 5px -2px rgba(0, 0, 0, 0.1);
       padding: 0 10px;
       .list {
-        height: 90px;
-        display: flex;
+        height: 85px;
         overflow: auto;
         margin-top: 10px;
-        .list-box {
-          display: flex;
-          .item {
-            width: 70px;
-            height: 70px;
-            margin-right: 40px;
-            position: relative;
-            img {
-              width: 100%;
-              height: 100%;
-            }
-            .close {
-              width: 9px;
-              height: 9px;
-              background: url('../../assets/images/item-close.png') no-repeat center center / 100%
-                100%;
-              position: absolute;
-              top: 0px;
-              right: -13px;
-              cursor: pointer;
-            }
+        user-select: text;
+        .item {
+          font-size: 14px;
+          line-height: 1.5;
+          color: #262626;
+          span {
+            color: red;
           }
         }
       }
       .btns {
         display: flex;
         justify-content: end;
-        margin-top: 7px;
+        margin-top: 10px;
+        .file {
+          width: 0;
+          height: 0;
+          opacity: 0;
+        }
+        .btn {
+          margin-left: 10px;
+        }
         .btn-upload {
-          width: 87px;
+          width: 77px;
           height: 30px;
           cursor: pointer;
-          background: url('../../assets/images/input-btn-upimg.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/input-btn-upaudio.png') no-repeat center center /
+            100% 100%;
         }
         .btn-upload:hover {
-          background: url('../../assets/images/input-btn-upimg-hover.png') no-repeat center center /
+          background: url('@renderer/assets/images/input-btn-upaudio-hover.png') no-repeat center
+            center / 100% 100%;
+        }
+        .btn-record {
+          width: 77px;
+          height: 30px;
+          cursor: pointer;
+          background: url('@renderer/assets/images/input-btn-record.png') no-repeat center center / 100%
+            100%;
+        }
+        .btn-record:hover,
+        .btn-record.active {
+          background: url('@renderer/assets/images/input-btn-record-hover.png') no-repeat center
+            center / 100% 100%;
+        }
+        .btn-pause {
+          width: 65px;
+          height: 30px;
+          cursor: pointer;
+          background: url('@renderer/assets/images/input-btn-pause.png') no-repeat center center / 100%
+            100%;
+        }
+        .btn-pause:hover,
+        .btn-pause.active {
+          background: url('@renderer/assets/images/input-btn-pause-hover.png') no-repeat center center /
             100% 100%;
+        }
+        .btn-recover {
+          width: 65px;
+          height: 30px;
+          cursor: pointer;
+          background: url('@renderer/assets/images/input-btn-recover.png') no-repeat center center /
+            100% 100%;
+        }
+        .btn-recover:hover {
+          background: url('@renderer/assets/images/input-btn-recover-hover.png') no-repeat center
+            center / 100% 100%;
+        }
+        .btn-complete {
+          width: 65px;
+          height: 30px;
+          cursor: pointer;
+          background: url('@renderer/assets/images/input-btn-complete.png') no-repeat center center /
+            100% 100%;
+        }
+        .btn-complete:hover {
+          background: url('@renderer/assets/images/input-btn-complete-hover.png') no-repeat center
+            center / 100% 100%;
         }
       }
     }
     .header {
       height: 35px;
-      line-height: 35px;
       font-size: 12px;
       color: #79747e;
       border-bottom: 1px solid #9883b2;
+      display: flex;
+      align-items: center;
+      .btn-rename {
+        width: 67px;
+        height: 22px;
+        background: url('@renderer/assets/images/input-btn-rename.png') no-repeat center center / 100%
+          100%;
+        cursor: pointer;
+      }
+      .btn-rename:hover {
+        background: url('@renderer/assets/images/input-btn-rename-hover.png') no-repeat center center /
+          100% 100%;
+      }
     }
   }
 
@@ -812,11 +891,11 @@
       .type-btn-add {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('../../assets/images/btn-add-type-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center / 100%
           100%;
       }
     }
@@ -870,22 +949,22 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
           100%;
       }
       .type-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
       }
     }
   }
@@ -944,28 +1023,28 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
           100%;
       }
       .type-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
       }
     }
   }
 
-  .dialog-upload {
-    width: 530px;
+  .dialog-rename {
+    width: 350px;
     background: #ffffff;
     border: 1px solid #7f7f7f;
     border-radius: 10px;
@@ -975,63 +1054,58 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    .file {
-      width: 0px;
-      height: 0px;
-      opacity: 0;
-    }
-    .upload-header {
+    .rename-header {
       height: 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      .upload-title {
+      .rename-title {
         font-size: 16px;
         color: #4a4459;
       }
-      .btn-upload {
-        width: 64px;
-        height: 30px;
-        background: url('../../assets/images/btn-upload.png') no-repeat center center / 100% 100%;
-        cursor: pointer;
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      .label {
+        width: 60px;
+        font-size: 14px;
+        color: #4a4459;
+        margin-right: 10px;
       }
-      .btn-upload:hover {
-        background: url('../../assets/images/btn-upload-hover.png') no-repeat center center / 100%
-          100%;
+      input {
+        flex: 1;
+        height: 26px;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        outline: none;
       }
     }
-    .area {
-      height: 190px;
-      line-height: 190px;
-      text-align: center;
-      color: #79747e;
-      font-size: 14px;
-      border: 1px dashed #696273;
-    }
-    .upload-footer {
+    .rename-footer {
       display: flex;
       justify-content: end;
       align-items: center;
-      margin: 5px 0px;
-      .upload-btn-cancel {
+      margin-bottom: 5px;
+      .rename-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
-      .upload-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
+      .rename-btn-cancel:hover {
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
           100%;
       }
-      .upload-btn-ok {
+      .rename-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
-      .upload-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+      .rename-btn-ok:hover {
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
       }
     }
   }

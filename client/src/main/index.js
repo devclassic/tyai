@@ -1,6 +1,16 @@
-import { app, Tray, Menu, BrowserWindow, globalShortcut, ipcMain, dialog } from 'electron'
+import {
+  app,
+  Tray,
+  Menu,
+  BrowserWindow,
+  globalShortcut,
+  ipcMain,
+  dialog,
+  session,
+  shell,
+} from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { join } from 'path'
+import { join, basename, dirname } from 'path'
 import Screenshots from 'electron-screenshots'
 import icon from '../../resources/icon.png?asset'
 
@@ -44,8 +54,8 @@ const createMainWindow = () => {
 // 创建剪贴板窗口
 const createClipboardWindow = () => {
   const win = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 800,
+    height: 600,
     show: false,
     frame: false,
     resizable: false,
@@ -63,15 +73,83 @@ const createClipboardWindow = () => {
 
   const devurl = process.env['ELECTRON_RENDERER_URL']
   if (is.dev && devurl) {
-    win.loadURL(`${devurl}/portable.html`)
+    win.loadURL(`${devurl}/portable.html#/index`)
   } else {
-    win.loadFile(join(__dirname, '../renderer/portable.html'))
+    win.loadFile(join(__dirname, '../renderer/portable.html#/index'))
   }
 
   return win
 }
 
+// 创建剪贴板窗口
+const createPortableWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    frame: false,
+    resizable: false,
+    autoHideMenuBar: true,
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+
+  win.on('ready-to-show', () => {
+    win.show()
+  })
+
+  const devurl = process.env['ELECTRON_RENDERER_URL']
+  if (is.dev && devurl) {
+    win.loadURL(`${devurl}/portable.html#/about`)
+  } else {
+    win.loadFile(join(__dirname, '../renderer/portable.html#/about'))
+  }
+
+  return win
+}
+
+let portableWindow = null
+const showPortableWindow = () => {
+  if (portableWindow) {
+    if (portableWindow.isVisible()) {
+      portableWindow.close()
+    } else {
+      portableWindow.show()
+      portableWindow.focus()
+    }
+  } else {
+    portableWindow = createPortableWindow()
+    portableWindow.on('blur', () => {
+      portableWindow.close()
+    })
+    portableWindow.on('closed', () => {
+      portableWindow = null
+    })
+  }
+}
+
 let clipboardWindow = null
+const showClipboardWindow = () => {
+  if (clipboardWindow) {
+    if (clipboardWindow.isVisible()) {
+      clipboardWindow.close()
+    } else {
+      clipboardWindow.show()
+      clipboardWindow.focus()
+    }
+  } else {
+    clipboardWindow = createClipboardWindow()
+    clipboardWindow.on('blur', () => {
+      clipboardWindow.close()
+    })
+    clipboardWindow.on('closed', () => {
+      clipboardWindow = null
+    })
+  }
+}
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('ink.epoint.client')
@@ -84,6 +162,9 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
 
+  // 主窗口
+  const mainWindow = createMainWindow()
+
   // 截图功能
   const screenshots = new Screenshots()
   screenshots.on('ok', (e, buffer, bounds) => {
@@ -95,22 +176,24 @@ app.whenReady().then(() => {
     screenshots.startCapture()
   })
 
+  globalShortcut.register('alt+x', () => {
+    showPortableWindow()
+  })
+
   globalShortcut.register('alt+c', () => {
-    if (clipboardWindow) {
-      clipboardWindow.show()
-      clipboardWindow.focus()
+    showClipboardWindow()
+  })
+
+  globalShortcut.register('alt+v', () => {
+    if (mainWindow.isVisible()) {
+      mainWindow.hide()
     } else {
-      clipboardWindow = createClipboardWindow()
-      clipboardWindow.on('closed', () => {
-        clipboardWindow = null
-      })
+      mainWindow.show()
+      mainWindow.focus()
     }
   })
 
-  // 主窗口
-  const mainWindow = createMainWindow()
-
-  // IPC通信
+  // 通用IPC通信
   ipcMain.on('minimize', () => {
     BrowserWindow.getFocusedWindow().minimize()
   })
@@ -121,7 +204,7 @@ app.whenReady().then(() => {
 
   ipcMain.on('download', async (e, url) => {
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-      defaultPath: path.basename(url),
+      defaultPath: basename(url),
     })
     if (canceled || !filePath) return
     const ses = session.fromPartition(`download_${Date.now()}`)
@@ -129,7 +212,7 @@ app.whenReady().then(() => {
       item.setSavePath(filePath)
       item.once('done', async (e, state) => {
         if (state === 'completed') {
-          shell.openPath(path.dirname(filePath))
+          shell.openPath(dirname(filePath))
         }
       })
     })
@@ -150,23 +233,15 @@ app.whenReady().then(() => {
       click: () => {},
     },
     {
-      label: '应用桥',
-      click: () => {
-        if (clipboardWindow) {
-          clipboardWindow.show()
-          clipboardWindow.focus()
-        } else {
-          clipboardWindow = createClipboardWindow()
-          clipboardWindow.on('closed', () => {
-            clipboardWindow = null
-          })
-        }
-      },
-    },
-    {
       label: '截图',
       click: () => {
         screenshots.startCapture()
+      },
+    },
+    {
+      label: '灵犀版',
+      click: () => {
+        showClipboardWindow()
       },
     },
     {

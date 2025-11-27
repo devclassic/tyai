@@ -7,11 +7,7 @@
       <div @click="refresh" class="btn-refresh"></div>
       <div v-show="state.showMneu" class="menu">
         <div class="menu-box">
-          <div
-            v-for="item in state.types"
-            @click="changeType(item)"
-            class="item"
-            :class="{ active: item.id === state.currentTypeId }">
+          <div v-for="item in state.types" @click="changeType(item)" class="item">
             <div class="icon"></div>
             <div class="text">{{ item.name }}</div>
           </div>
@@ -20,7 +16,7 @@
     </div>
     <div class="content">
       <div class="content-header">
-        <div class="title">知识库</div>
+        <div class="title">智能公文</div>
         <div class="status">{{ state.status }}</div>
       </div>
       <div ref="chatBox" class="chat-box">
@@ -100,8 +96,8 @@
       <input v-model="state.type.name" type="text" />
     </div>
     <div class="item">
-      <div class="label">Key</div>
-      <input v-model="state.type.key" type="text" />
+      <div class="label">内容</div>
+      <textarea v-model="state.type.query"></textarea>
     </div>
     <div class="type-footer">
       <div @click="hideTypeEditDialog" class="type-btn-cancel"></div>
@@ -116,9 +112,9 @@
   import { fetchEventSource } from '@microsoft/fetch-event-source'
   import { marked } from 'marked'
   import { ElMessage } from 'element-plus'
-  import { useAxios } from '../../hooks/useAxios'
-  import { useRecorder } from '../../hooks/useRecorder'
-  import { useSettingsStore } from '../../stores'
+  import { useAxios } from '@renderer/hooks/useAxios'
+  import { useRecorder } from '@renderer/hooks/useRecorder'
+  import { useSettingsStore } from '@renderer/stores/main/settings'
 
   const state = reactive({
     id: '',
@@ -129,33 +125,30 @@
     types: [],
     type: {
       name: '',
-      key: '',
+      query: '',
     },
     status: '',
-    token: '',
     currentTypeId: '',
     messages: [],
     recording: false,
     chatBoxRef: useTemplateRef('chatBox'),
   })
+
   const settingsStore = useSettingsStore()
 
   const http = useAxios()
   const recorder = useRecorder()
 
   const getTypes = async () => {
-    const res = await http.post('/api/types/all', { type: 'knowledge' })
+    const res = await http.post('/api/types/all', { type: 'doc' })
     state.types = res.data.data
-    if (state.types.length > 0) {
-      state.token = state.types[0].query
-      state.currentTypeId = state.types[0].id
-    }
   }
   getTypes()
 
   const changeType = item => {
-    state.token = item.query
+    input.value = item.query
     state.currentTypeId = item.id
+    ElMessage.success('设置成功')
   }
 
   const headerHeight = computed(() => {
@@ -206,16 +199,16 @@
     switch (state.action) {
       case 'add':
         await http.post('/api/types/add', {
-          type: 'knowledge',
+          type: 'doc',
           name: state.type.name,
-          query: state.type.key,
+          query: state.type.query,
         })
         break
       case 'edit':
         await http.post('/api/types/update', {
           id: state.id,
           name: state.type.name,
-          query: state.type.key,
+          query: state.type.query,
         })
         break
     }
@@ -279,7 +272,7 @@
     await fetchEventSource(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query, token: state.token }),
+      body: JSON.stringify({ query: query, type: 'doc' }),
       signal: ctrl.signal,
       async onopen(e) {
         if (e.ok) {
@@ -349,7 +342,7 @@
     await fetchEventSource(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: input.value, token: state.token }),
+      body: JSON.stringify({ query: input.value, type: 'doc' }),
       signal: ctrl.signal,
       async onopen(e) {
         if (e.ok) {
@@ -406,7 +399,8 @@
       text-align: center;
       font-size: 45px;
       color: #625b71;
-      background: url('../../assets/images/header-title.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100%
+        100%;
       position: absolute;
       top: 5px;
       left: 50%;
@@ -415,7 +409,8 @@
     .btn-type {
       width: 90px;
       height: 27px;
-      background: url('../../assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100%
+        100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -423,14 +418,14 @@
       left: 0px;
     }
     .btn-type:hover {
-      background: url('../../assets/images/header-btn-type-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-type-hover.png') no-repeat center center /
         100% 100%;
     }
     .btn-custom {
       width: 69px;
       height: 27px;
-      background: url('../../assets/images/header-btn-custom.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center /
+        100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -438,14 +433,14 @@
       left: 100px;
     }
     .btn-custom:hover {
-      background: url('../../assets/images/header-btn-custom-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .btn-refresh {
       width: 60px;
       height: 27px;
-      background: url('../../assets/images/header-btn-refresh.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center /
+        100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -453,8 +448,8 @@
       right: 0px;
     }
     .btn-refresh:hover {
-      background: url('../../assets/images/header-btn-refresh-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .menu {
       width: 100%;
@@ -486,9 +481,9 @@
         }
         .icon {
           width: 14px;
-          height: 14px;
-          background: url('../../assets/images/header-menu-icon-1.png') no-repeat center center /
-            100% 100%;
+          height: 18px;
+          background: url('@renderer/assets/images/header-menu-icon-2.png') no-repeat center
+            center / 100% 100%;
         }
         .text {
           margin-left: 10px;
@@ -540,7 +535,7 @@
         .avatar {
           width: 44px;
           height: 44px;
-          background: url('../../assets/images/avatar.png');
+          background: url('@renderer/assets/images/avatar.png');
         }
         .right {
           margin-left: 10px;
@@ -567,16 +562,16 @@
               cursor: pointer;
             }
             .tool1 {
-              background: url('../../assets/images/msg-icon-1.png') no-repeat center center / 100%
-                100%;
+              background: url('@renderer/assets/images/msg-icon-1.png') no-repeat center center /
+                100% 100%;
             }
             .tool2 {
-              background: url('../../assets/images/msg-icon-2.png') no-repeat center center / 100%
-                100%;
+              background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center /
+                100% 100%;
             }
             .tool3 {
-              background: url('../../assets/images/msg-icon-3.png') no-repeat center center / 100%
-                100%;
+              background: url('@renderer/assets/images/msg-icon-3.png') no-repeat center center /
+                100% 100%;
             }
           }
         }
@@ -608,7 +603,8 @@
           cursor: pointer;
         }
         .tool2 {
-          background: url('../../assets/images/msg-icon-2.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center / 100%
+            100%;
         }
       }
     }
@@ -649,27 +645,29 @@
       cursor: pointer;
     }
     .btn-speech {
-      background: url('../../assets/images/input-btn-speech.png') no-repeat center center / 100%
+      background: url('@renderer/assets/images/input-btn-speech.png') no-repeat center center / 100%
         100%;
     }
     .btn-speech:hover,
     .btn-speech.active {
-      background: url('../../assets/images/input-btn-speech-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/input-btn-speech-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .btn-clean {
-      background: url('../../assets/images/input-btn-clean.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/input-btn-clean.png') no-repeat center center / 100%
+        100%;
     }
     .btn-clean:hover {
-      background: url('../../assets/images/input-btn-clean-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/input-btn-clean-hover.png') no-repeat center center /
         100% 100%;
     }
     .btn-send {
-      background: url('../../assets/images/input-btn-send.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/input-btn-send.png') no-repeat center center / 100%
+        100%;
     }
     .btn-send:hover {
-      background: url('../../assets/images/input-btn-send-hover.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/input-btn-send-hover.png') no-repeat center center /
+        100% 100%;
     }
   }
 
@@ -697,12 +695,13 @@
       .type-btn-add {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('../../assets/images/btn-add-type-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center /
+          100% 100%;
       }
     }
     .type-content {
@@ -755,22 +754,24 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .type-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }
@@ -798,7 +799,7 @@
     }
     .item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 10px;
       .label {
         width: 28px;
@@ -813,6 +814,13 @@
         border-radius: 5px;
         outline: none;
       }
+      textarea {
+        flex: 1;
+        height: 115px;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        outline: none;
+      }
     }
     .type-footer {
       display: flex;
@@ -822,22 +830,24 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .type-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }

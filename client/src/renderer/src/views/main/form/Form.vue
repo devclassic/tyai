@@ -150,9 +150,9 @@
 <script setup>
   import { reactive, computed, useTemplateRef } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { useAxios } from '../../hooks/useAxios'
-  import { useRecorder } from '../../hooks/useRecorder'
-  import { useSettingsStore } from '../../stores'
+  import { useAxios } from '@renderer/hooks/useAxios'
+  import { useRecorder } from '@renderer/hooks/useRecorder'
+  import { useSettingsStore } from '@renderer/stores/main/settings'
 
   const state = reactive({
     showMneu: false,
@@ -409,7 +409,7 @@
       text-align: center;
       font-size: 45px;
       color: #625b71;
-      background: url('../../assets/images/header-title.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100% 100%;
       position: absolute;
       top: 5px;
       left: 50%;
@@ -418,7 +418,7 @@
     .btn-type {
       width: 90px;
       height: 27px;
-      background: url('../../assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -426,13 +426,13 @@
       left: 0px;
     }
     .btn-type:hover {
-      background: url('../../assets/images/header-btn-type-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-type-hover.png') no-repeat center center /
         100% 100%;
     }
     .btn-custom {
       width: 69px;
       height: 27px;
-      background: url('../../assets/images/header-btn-custom.png') no-repeat center center / 100%
+      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center / 100%
         100%;
       cursor: pointer;
       app-region: no-drag;
@@ -441,13 +441,13 @@
       left: 100px;
     }
     .btn-custom:hover {
-      background: url('../../assets/images/header-btn-custom-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center center /
         100% 100%;
     }
     .btn-refresh {
       width: 60px;
       height: 27px;
-      background: url('../../assets/images/header-btn-refresh.png') no-repeat center center / 100%
+      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center / 100%
         100%;
       cursor: pointer;
       app-region: no-drag;
@@ -456,7 +456,7 @@
       right: 0px;
     }
     .btn-refresh:hover {
-      background: url('../../assets/images/header-btn-refresh-hover.png') no-repeat center center /
+      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center center /
         100% 100%;
     }
     .menu {
@@ -490,7 +490,7 @@
         .icon {
           width: 14px;
           height: 14px;
-          background: url('../../assets/images/header-menu-icon-1.png') no-repeat center center /
+          background: url('@renderer/assets/images/header-menu-icon-1.png') no-repeat center center /
             100% 100%;
         }
         .text {
@@ -599,35 +599,35 @@
         cursor: pointer;
       }
       .btn-record {
-        background: url('../../assets/images/form-btn-record.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/form-btn-record.png') no-repeat center center / 100%
           100%;
       }
       .btn-record:hover,
       .btn-record.active {
-        background: url('../../assets/images/form-btn-record-hover.png') no-repeat center center /
+        background: url('@renderer/assets/images/form-btn-record-hover.png') no-repeat center center /
           100% 100%;
       }
       .btn-opt {
-        background: url('../../assets/images/form-btn-opt.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/form-btn-opt.png') no-repeat center center / 100% 100%;
       }
       .btn-opt:hover {
-        background: url('../../assets/images/form-btn-opt-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/form-btn-opt-hover.png') no-repeat center center / 100%
           100%;
       }
       .btn-upload {
-        background: url('../../assets/images/form-btn-upload.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/form-btn-upload.png') no-repeat center center / 100%
           100%;
       }
       .btn-upload:hover {
-        background: url('../../assets/images/form-btn-upload-hover.png') no-repeat center center /
+        background: url('@renderer/assets/images/form-btn-upload-hover.png') no-repeat center center /
           100% 100%;
       }
       .btn-download {
-        background: url('../../assets/images/form-btn-download.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/form-btn-download.png') no-repeat center center / 100%
           100%;
       }
       .btn-download:hover {
-        background: url('../../assets/images/form-btn-download-hover.png') no-repeat center center /
+        background: url('@renderer/assets/images/form-btn-download-hover.png') no-repeat center center /
           100% 100%;
       }
     }
@@ -657,11 +657,11 @@
       .type-btn-add {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('../../assets/images/btn-add-type-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center / 100%
           100%;
       }
     }
@@ -723,32 +723,32 @@
       .type-btn-add {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-add.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('../../assets/images/btn-add-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-hover.png') no-repeat center center / 100% 100%;
       }
       .type-btn-cancel {
         width: 65px;
         height: 30px;
         margin-left: 10px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
           100%;
       }
       .type-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
       }
     }
   }
@@ -807,22 +807,22 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('../../assets/images/btn-cancel-hover.png') no-repeat center center / 100%
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
           100%;
       }
       .type-btn-ok {
         width: 65px;
         height: 30px;
-        background: url('../../assets/images/btn-ok.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok.png') no-repeat center center / 100% 100%;
         cursor: pointer;
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('../../assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
       }
     }
   }

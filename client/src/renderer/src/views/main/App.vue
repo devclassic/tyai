@@ -9,8 +9,8 @@
 </template>
 
 <script setup>
-  import WinBtns from './components/winbtns/WinBtns.vue'
-  import Sidebar from './components/sidebar/Sidebar.vue'
+  import WinBtns from '@renderer/components/main/winbtns/WinBtns.vue'
+  import Sidebar from '@renderer/components/main/sidebar/Sidebar.vue'
 </script>
 
 <style lang="scss" scoped>

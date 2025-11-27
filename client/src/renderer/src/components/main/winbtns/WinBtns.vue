@@ -7,7 +7,7 @@
 
 <script setup>
   import { reactive } from 'vue'
-  
+
   const state = reactive({
     showMin: true,
   })
@@ -40,18 +40,19 @@
     .min {
       width: 32px;
       height: 32px;
-      background: url('../../assets/images/win-min.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/win-min.png') no-repeat center center / 100% 100%;
       &:hover {
-        background: url('../../assets/images/win-min-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/win-min-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
     .close {
       width: 32px;
       height: 32px;
-      background: url('../../assets/images/win-close.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/win-close.png') no-repeat center center / 100% 100%;
       &:hover {
-        background: url('../../assets/images/win-close-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/win-close-hover.png') no-repeat center center /
+          100% 100%;
       }
     }
   }
