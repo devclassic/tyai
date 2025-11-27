@@ -20,6 +20,7 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@vueuse/core": "^14.0.0",
     "axios": "^1.13.2",
+    "electron-screenshots": "^0.5.27",
     "element-plus": "^2.11.8",
     "js-audio-recorder": "^1.0.7",
     "marked": "^17.0.0",

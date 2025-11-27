@@ -1,11 +1,12 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { app, Tray, Menu, BrowserWindow, globalShortcut, ipcMain, dialog } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import ipc from './ipc'
+import { join } from 'path'
+import Screenshots from 'electron-screenshots'
 import icon from '../../resources/icon.png?asset'
 
-function createWindow() {
-  const mainWindow = new BrowserWindow({
+// 创建主窗口
+export const createMainWindow = () => {
+  const win = new BrowserWindow({
     width: 1280,
     height: 720,
     show: false,
@@ -19,39 +20,168 @@ function createWindow() {
     },
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  win.on('ready-to-show', () => {
+    win.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler(details => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
+  win.on('restore', () => win.webContents.send('win-restored'))
+
+  win.on('close', e => {
+    e.preventDefault()
+    win.hide()
   })
 
-  mainWindow.on('restore', () => mainWindow.webContents.send('win-restored'))
-
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  const devurl = process.env['ELECTRON_RENDERER_URL']
+  if (is.dev && devurl) {
+    win.loadURL(`${devurl}/index.html`)
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  return mainWindow
+
+  return win
 }
 
+// 创建剪贴板窗口
+export const createClipboardWindow = () => {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 720,
+    show: false,
+    frame: false,
+    resizable: false,
+    autoHideMenuBar: true,
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+
+  win.on('ready-to-show', () => {
+    win.show()
+  })
+
+  const devurl = process.env['ELECTRON_RENDERER_URL']
+  if (is.dev && devurl) {
+    win.loadURL(`${devurl}/portable.html`)
+  } else {
+    win.loadFile(join(__dirname, '../renderer/portable.html'))
+  }
+
+  return win
+}
+
+let clipboardWindow = null
+
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('ink.epoint')
+  electronApp.setAppUserModelId('ink.epoint.client')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  const win = createWindow()
-
-  ipc.init(win)
-
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
+
+  // 截图功能
+  const screenshots = new Screenshots()
+  screenshots.on('ok', (e, buffer, bounds) => {
+    console.log('ok')
+  })
+
+  // 全局快捷键
+  globalShortcut.register('alt+z', () => {
+    screenshots.startCapture()
+  })
+
+  globalShortcut.register('alt+c', () => {
+    if (clipboardWindow) {
+      clipboardWindow.show()
+      clipboardWindow.focus()
+    } else {
+      clipboardWindow = createClipboardWindow()
+      clipboardWindow.on('closed', () => {
+        clipboardWindow = null
+      })
+    }
+  })
+
+  // 主窗口
+  const mainWindow = createMainWindow()
+
+  // IPC通信
+  ipcMain.on('minimize', () => {
+    BrowserWindow.getFocusedWindow().minimize()
+  })
+
+  ipcMain.on('close', () => {
+    BrowserWindow.getFocusedWindow().close()
+  })
+
+  ipcMain.on('download', async (e, url) => {
+    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      defaultPath: path.basename(url),
+    })
+    if (canceled || !filePath) return
+    const ses = session.fromPartition(`download_${Date.now()}`)
+    ses.once('will-download', (e, item) => {
+      item.setSavePath(filePath)
+      item.once('done', async (e, state) => {
+        if (state === 'completed') {
+          shell.openPath(path.dirname(filePath))
+        }
+      })
+    })
+    ses.downloadURL(url)
+  })
+
+  // 系统托盘
+  const menus = Menu.buildFromTemplate([
+    {
+      label: '主窗口',
+      click: () => {
+        mainWindow.show()
+        mainWindow.focus()
+      },
+    },
+    {
+      label: '便携窗口',
+      click: () => {},
+    },
+    {
+      label: '应用桥',
+      click: () => {
+        if (clipboardWindow) {
+          clipboardWindow.show()
+          clipboardWindow.focus()
+        } else {
+          clipboardWindow = createClipboardWindow()
+          clipboardWindow.on('closed', () => {
+            clipboardWindow = null
+          })
+        }
+      },
+    },
+    {
+      label: '截图',
+      click: () => {
+        screenshots.startCapture()
+      },
+    },
+    {
+      label: '退出',
+      click: () => {
+        BrowserWindow.getAllWindows().forEach(w => w.destroy())
+        app.quit()
+        tray.destroy()
+      },
+    },
+  ])
+
+  const tray = new Tray(icon)
+  tray.setContextMenu(menus)
+  tray.setToolTip('端点科技通用AI客户端')
 })
 
 app.on('window-all-closed', () => {
