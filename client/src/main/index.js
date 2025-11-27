@@ -51,43 +51,14 @@ const createMainWindow = () => {
   return win
 }
 
-// 创建剪贴板窗口
-const createClipboardWindow = () => {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    show: false,
-    frame: false,
-    resizable: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-    },
-  })
-
-  win.on('ready-to-show', () => {
-    win.show()
-  })
-
-  const devurl = process.env['ELECTRON_RENDERER_URL']
-  if (is.dev && devurl) {
-    win.loadURL(`${devurl}/portable.html#/index`)
-  } else {
-    win.loadFile(join(__dirname, '../renderer/portable.html#/index'))
-  }
-
-  return win
-}
-
-// 创建剪贴板窗口
+// 创建便携窗口
 const createPortableWindow = () => {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
     show: false,
     frame: false,
+    transparent: true,
     resizable: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -97,7 +68,8 @@ const createPortableWindow = () => {
     },
   })
 
-  win.on('ready-to-show', () => {
+  win.on('ready-to-show', async () => {
+    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/about" }, 10)')
     win.show()
   })
 
@@ -105,14 +77,48 @@ const createPortableWindow = () => {
   if (is.dev && devurl) {
     win.loadURL(`${devurl}/portable.html#/about`)
   } else {
-    win.loadFile(join(__dirname, '../renderer/portable.html#/about'))
+    win.loadFile(join(__dirname, '../renderer/portable.html'))
+  }
+
+  return win
+}
+
+// 创建剪贴板窗口
+const createClipboardWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    autoHideMenuBar: true,
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+
+  win.on('ready-to-show', async () => {
+    await win.webContents.executeJavaScript(
+      'setTimeout(() => { location.hash = "#/clipboard" }, 10)',
+    )
+    win.show()
+  })
+
+  const devurl = process.env['ELECTRON_RENDERER_URL']
+  if (is.dev && devurl) {
+    win.loadURL(`${devurl}/portable.html#/clipboard`)
+  } else {
+    win.loadFile(join(__dirname, '../renderer/portable.html'))
   }
 
   return win
 }
 
 let portableWindow = null
-const showPortableWindow = () => {
+const showPortableWindow = async () => {
   if (portableWindow) {
     if (portableWindow.isVisible()) {
       portableWindow.close()
@@ -132,7 +138,7 @@ const showPortableWindow = () => {
 }
 
 let clipboardWindow = null
-const showClipboardWindow = () => {
+const showClipboardWindow = async () => {
   if (clipboardWindow) {
     if (clipboardWindow.isVisible()) {
       clipboardWindow.close()
