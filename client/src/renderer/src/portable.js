@@ -1,8 +1,8 @@
-import './assets/css/global.scss'
+import '@renderer/assets/css/portable.scss'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import router from './router/portable'
-import App from './views/portable/App.vue'
+import router from '@renderer/router/portable'
+import App from '@renderer/views/portable/App.vue'
 
 const pinia = createPinia()
 

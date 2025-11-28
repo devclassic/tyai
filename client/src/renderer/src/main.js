@@ -1,10 +1,10 @@
-import './assets/css/global.scss'
+import '@renderer/assets/css/main.scss'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import router from './router/main'
-import App from './views/main/App.vue'
+import router from '@renderer/router/main'
+import App from '@renderer/views/main/App.vue'
 
 const pinia = createPinia()
 
