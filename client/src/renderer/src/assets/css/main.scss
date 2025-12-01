@@ -9,7 +9,7 @@ body {
   user-select: none;
 }
 
-.chat-box .text {
+.chat-box .text * {
   word-break: break-word;
   overflow-wrap: break-word;
   white-space: normal;
