@@ -36,7 +36,7 @@
     </div>
     <div @click="router.push('/ocr')" class="item" :class="{ active: route.path === '/ocr' }">
       <div class="icon icon-4"></div>
-      <div class="text">ORC识别</div>
+      <div class="text">OCR识别</div>
     </div>
     <div @click="router.push('/docs')" class="item" :class="{ active: route.path === '/docs' }">
       <div class="icon icon-5"></div>

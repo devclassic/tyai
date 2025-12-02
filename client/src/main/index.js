@@ -8,10 +8,14 @@ import {
   dialog,
   session,
   shell,
+  clipboard,
 } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { join, basename, dirname } from 'path'
+import path, { join, basename, dirname } from 'path'
 import Screenshots from 'electron-screenshots'
+import crypto from 'crypto'
+import fs from 'fs-extra'
+import { v4 as uuidv4 } from 'uuid'
 import icon from '../../resources/icon.png?asset'
 
 // 创建主窗口
@@ -86,7 +90,7 @@ const createPortableWindow = () => {
 // 创建剪贴板窗口
 const createClipboardWindow = () => {
   const win = new BrowserWindow({
-    width: 800,
+    width: 380,
     height: 600,
     show: false,
     frame: false,
@@ -149,11 +153,53 @@ const showClipboardWindow = async () => {
   } else {
     clipboardWindow = createClipboardWindow()
     clipboardWindow.on('blur', () => {
-      clipboardWindow.close()
+      // clipboardWindow.close()
     })
     clipboardWindow.on('closed', () => {
       clipboardWindow = null
     })
+  }
+}
+
+const history = []
+let lastText = ''
+let lastImgHash = ''
+const readClip = () => {
+  const text = clipboard.readText()
+  const img = clipboard.readImage()
+  let changed = false
+  let record = {
+    id: uuidv4(),
+    ts: Date.now(),
+  }
+
+  if (text && text !== lastText) {
+    lastText = text
+    record.type = 'text'
+    record.payload = text
+    changed = true
+  }
+  if (!img.isEmpty()) {
+    const buf = img.toPNG()
+    const h = crypto.createHash('md5').update(buf).digest('hex')
+    if (h !== lastImgHash) {
+      lastImgHash = h
+      record.type = 'image'
+      record.hash = h
+      const fname = `${Date.now()}.png`
+      const dir = path.join(__dirname, 'data/img')
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+      }
+      const fullPath = path.join(dir, fname)
+      fs.writeFileSync(fullPath, buf)
+      record.payload = fullPath
+      changed = true
+    }
+  }
+  if (changed) {
+    history.push(record)
+    if (clipboardWindow) clipboardWindow.webContents.send('new-clip', record)
   }
 }
 
@@ -167,6 +213,11 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
+
+  // 定时器读取剪贴板
+  setInterval(() => {
+    readClip()
+  }, 500)
 
   // 主窗口
   const mainWindow = createMainWindow()
@@ -206,6 +257,35 @@ app.whenReady().then(() => {
 
   ipcMain.on('close', () => {
     BrowserWindow.getFocusedWindow().close()
+  })
+
+  ipcMain.handle('get-history', () => {
+    return history.slice().reverse()
+  })
+
+  ipcMain.on('remove-history', (e, id) => {
+    const index = history.findIndex(item => item.id === id)
+    if (index !== -1) {
+      const item = history[index]
+      if (lastText === item.payload) {
+        lastText = ''
+      }
+      if (lastImgHash === item.hash) {
+        lastImgHash = ''
+      }
+      history.splice(index, 1)
+    }
+  })
+
+  ipcMain.on('clear-history', () => {
+    lastText = ''
+    lastImgHash = ''
+    history.length = 0
+  })
+
+  ipcMain.handle('read-local-image', async (event, path) => {
+    const data = fs.readFileSync(path)
+    return `data:image/png;base64,${data.toString('base64')}`
   })
 
   ipcMain.on('download', async (e, url) => {
