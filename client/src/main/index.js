@@ -122,6 +122,7 @@ const createClipboardWindow = () => {
 
 let portableWindow = null
 const showPortableWindow = () => {
+  if (clipboardWindow) clipboardWindow.close()
   if (portableWindow) {
     if (portableWindow.isVisible()) {
       portableWindow.close()
@@ -142,6 +143,7 @@ const showPortableWindow = () => {
 
 let clipboardWindow = null
 const showClipboardWindow = () => {
+  if (portableWindow) portableWindow.close()
   if (clipboardWindow) {
     if (clipboardWindow.isVisible()) {
       clipboardWindow.close()
@@ -301,7 +303,6 @@ app.whenReady().then(() => {
 
   let transJson = null
   ipcMain.on('to-portable', (e, json) => {
-    clipboardWindow.close()
     transJson = json
     showPortableWindow()
   })
