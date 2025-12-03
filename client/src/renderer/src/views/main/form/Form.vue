@@ -31,7 +31,7 @@
           <div v-if="item.type === 'single'" class="item">
             <div class="label">{{ item.name }}</div>
             <div class="input">
-              <input v-model="item.value" type="text" />
+              <input v-model="item.value" type="text" spellcheck="false" />
             </div>
             <div
               @click="item.checked = !item.checked"
@@ -41,7 +41,7 @@
           <div v-if="item.type === 'multi'" class="item multi">
             <div class="label">{{ item.name }}</div>
             <div class="input">
-              <textarea v-model="item.value"></textarea>
+              <textarea v-model="item.value" spellcheck="false"></textarea>
             </div>
             <div
               @click="item.checked = !item.checked"
@@ -409,7 +409,8 @@
       text-align: center;
       font-size: 45px;
       color: #625b71;
-      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100%
+        100%;
       position: absolute;
       top: 5px;
       left: 50%;
@@ -418,7 +419,8 @@
     .btn-type {
       width: 90px;
       height: 27px;
-      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100%
+        100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -432,8 +434,8 @@
     .btn-custom {
       width: 69px;
       height: 27px;
-      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center /
+        100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -441,14 +443,14 @@
       left: 100px;
     }
     .btn-custom:hover {
-      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .btn-refresh {
       width: 60px;
       height: 27px;
-      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center /
+        100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -456,8 +458,8 @@
       right: 0px;
     }
     .btn-refresh:hover {
-      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .menu {
       width: 100%;
@@ -490,8 +492,8 @@
         .icon {
           width: 14px;
           height: 14px;
-          background: url('@renderer/assets/images/header-menu-icon-1.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/header-menu-icon-1.png') no-repeat center
+            center / 100% 100%;
         }
         .text {
           margin-left: 10px;
@@ -599,36 +601,37 @@
         cursor: pointer;
       }
       .btn-record {
-        background: url('@renderer/assets/images/form-btn-record.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/form-btn-record.png') no-repeat center center /
+          100% 100%;
       }
       .btn-record:hover,
       .btn-record.active {
-        background: url('@renderer/assets/images/form-btn-record-hover.png') no-repeat center center /
-          100% 100%;
+        background: url('@renderer/assets/images/form-btn-record-hover.png') no-repeat center
+          center / 100% 100%;
       }
       .btn-opt {
-        background: url('@renderer/assets/images/form-btn-opt.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/form-btn-opt.png') no-repeat center center / 100%
+          100%;
       }
       .btn-opt:hover {
-        background: url('@renderer/assets/images/form-btn-opt-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/form-btn-opt-hover.png') no-repeat center center /
+          100% 100%;
       }
       .btn-upload {
-        background: url('@renderer/assets/images/form-btn-upload.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/form-btn-upload.png') no-repeat center center /
+          100% 100%;
       }
       .btn-upload:hover {
-        background: url('@renderer/assets/images/form-btn-upload-hover.png') no-repeat center center /
-          100% 100%;
+        background: url('@renderer/assets/images/form-btn-upload-hover.png') no-repeat center
+          center / 100% 100%;
       }
       .btn-download {
-        background: url('@renderer/assets/images/form-btn-download.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/form-btn-download.png') no-repeat center center /
+          100% 100%;
       }
       .btn-download:hover {
-        background: url('@renderer/assets/images/form-btn-download-hover.png') no-repeat center center /
-          100% 100%;
+        background: url('@renderer/assets/images/form-btn-download-hover.png') no-repeat center
+          center / 100% 100%;
       }
     }
   }
@@ -657,12 +660,13 @@
       .type-btn-add {
         width: 65px;
         height: 30px;
-        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center /
+          100% 100%;
       }
     }
     .type-content {
@@ -727,18 +731,20 @@
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('@renderer/assets/images/btn-add-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-hover.png') no-repeat center center / 100%
+          100%;
       }
       .type-btn-cancel {
         width: 65px;
         height: 30px;
         margin-left: 10px;
-        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .type-btn-ok {
         width: 65px;
@@ -748,7 +754,8 @@
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }
@@ -807,12 +814,13 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .type-btn-ok {
         width: 65px;
@@ -822,7 +830,8 @@
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }

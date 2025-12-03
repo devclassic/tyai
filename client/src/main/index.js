@@ -58,8 +58,8 @@ const createMainWindow = () => {
 // 创建便携窗口
 const createPortableWindow = () => {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 630,
+    height: 145,
     show: false,
     frame: false,
     transparent: true,
@@ -73,13 +73,13 @@ const createPortableWindow = () => {
   })
 
   win.on('ready-to-show', async () => {
-    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/about" }, 10)')
+    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/index" }, 10)')
     win.show()
   })
 
   const devurl = process.env['ELECTRON_RENDERER_URL']
   if (is.dev && devurl) {
-    win.loadURL(`${devurl}/portable.html#/about`)
+    win.loadURL(`${devurl}/portable.html#/index`)
   } else {
     win.loadFile(join(__dirname, '../renderer/portable.html'))
   }
@@ -117,12 +117,11 @@ const createClipboardWindow = () => {
   } else {
     win.loadFile(join(__dirname, '../renderer/portable.html'))
   }
-
   return win
 }
 
 let portableWindow = null
-const showPortableWindow = async () => {
+const showPortableWindow = () => {
   if (portableWindow) {
     if (portableWindow.isVisible()) {
       portableWindow.close()
@@ -133,7 +132,7 @@ const showPortableWindow = async () => {
   } else {
     portableWindow = createPortableWindow()
     portableWindow.on('blur', () => {
-      portableWindow.close()
+      // portableWindow.close()
     })
     portableWindow.on('closed', () => {
       portableWindow = null
@@ -142,7 +141,7 @@ const showPortableWindow = async () => {
 }
 
 let clipboardWindow = null
-const showClipboardWindow = async () => {
+const showClipboardWindow = () => {
   if (clipboardWindow) {
     if (clipboardWindow.isVisible()) {
       clipboardWindow.close()
@@ -259,6 +258,14 @@ app.whenReady().then(() => {
     BrowserWindow.getFocusedWindow().close()
   })
 
+  ipcMain.on('show-alert', async (e, { title, message }) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    dialog.showMessageBox(win, {
+      title,
+      message,
+    })
+  })
+
   ipcMain.handle('get-history', () => {
     return history.slice().reverse()
   })
@@ -283,9 +290,25 @@ app.whenReady().then(() => {
     history.length = 0
   })
 
-  ipcMain.handle('read-local-image', async (event, path) => {
+  ipcMain.handle('read-local-image', async (e, path) => {
     const data = fs.readFileSync(path)
     return `data:image/png;base64,${data.toString('base64')}`
+  })
+
+  ipcMain.on('resize-portable', (e, size) => {
+    portableWindow.setSize(size.width, size.height)
+  })
+
+  let transJson = null
+  ipcMain.on('to-portable', (e, json) => {
+    clipboardWindow.close()
+    transJson = json
+    showPortableWindow()
+  })
+
+  ipcMain.on('portable-ready', e => {
+    portableWindow.webContents.send('load', transJson)
+    transJson = null
   })
 
   ipcMain.on('download', async (e, url) => {
@@ -327,7 +350,7 @@ app.whenReady().then(() => {
       },
     },
     {
-      label: '灵犀版（Alt+C）',
+      label: '灵犀板（Alt+C）',
       click: () => {
         showClipboardWindow()
       },

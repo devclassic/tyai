@@ -24,16 +24,16 @@
             :class="{ active: item.check }">
             <div class="close" @click="removeItem(item.id)"></div>
             <div class="image">
-              <img :src="item.data" height="100%" />
+              <img :src="item.data" />
             </div>
             <div class="date">{{ format(item.ts, 'yyyy-MM-dd HH:mm:ss') }}</div>
           </div>
         </template>
       </div>
       <div class="btns">
-        <div class="btn btn-doc">生成文档</div>
+        <div @click="toDoc" class="btn btn-doc">生成文档</div>
         <div @click="state.showClear = true" class="btn btn-clear">清空记录</div>
-        <div class="btn btn-ai">导入AI</div>
+        <div @click="toPortable" class="btn btn-ai">导入AI</div>
       </div>
     </div>
     <div class="footer"></div>
@@ -108,6 +108,44 @@
         item.check = false
       })
     }
+  }
+
+  const toDoc = () => {
+    document.title = '灵犀板'
+    const items = state.history.filter(item => item.check)
+    if (items.length === 0) {
+      electron.ipcRenderer.send('show-alert', {
+        title: '灵犀板',
+        message: '请选择要生成文档的内容',
+      })
+      return
+    } else if (items.length > 1) {
+      electron.ipcRenderer.send('show-alert', {
+        title: '灵犀板',
+        message: '只能选择单个内容生成文档',
+      })
+      return
+    } else if (items[0].type !== 'image') {
+      electron.ipcRenderer.send('show-alert', {
+        title: '灵犀板',
+        message: '只能选择图片类型生成文档',
+      })
+      return
+    }
+    const item = items[0]
+  }
+
+  const toPortable = () => {
+    const history = state.history.filter(item => item.check)
+    if (history.length === 0) {
+      electron.ipcRenderer.send('show-alert', {
+        title: '灵犀板',
+        message: '请选择要导入AI的内容',
+      })
+      return
+    }
+    const json = JSON.stringify(history)
+    electron.ipcRenderer.send('to-portable', json)
   }
 </script>
 
@@ -202,6 +240,9 @@
           .text {
             color: #000000;
           }
+          .image {
+            border: 1px solid #ffffff;
+          }
           .date {
             color: #000000;
           }
@@ -217,6 +258,7 @@
           cursor: pointer;
         }
         .text {
+          width: 100%;
           margin-top: 15px;
           line-height: 1.5;
           font-size: 14px;
@@ -244,6 +286,11 @@
           display: flex;
           justify-content: center;
           align-items: center;
+          img {
+            max-width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
         }
         .date {
           font-size: 12px;
@@ -322,6 +369,10 @@
         padding: 5px 10px;
         font-size: 14px;
         cursor: pointer;
+        &:hover {
+          background: #5b5b5b;
+          color: #ffffff;
+        }
       }
     }
   }
