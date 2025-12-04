@@ -5,6 +5,8 @@ export const useDataStore = defineStore('data', () => {
   const state = reactive({
     imgs: [],
     files: [],
+    upfiles: [],
+    input: '',
   })
   return { state }
 })

@@ -5,84 +5,48 @@
       <div @click="minimize" class="btn btn-min"></div>
       <div @click="close" class="btn btn-close"></div>
     </div>
-    <div class="chat-box">
-      <div class="item left">
-        <div class="content">
-          <div class="message">
-            测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容
-            测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容
-            测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容
-          </div>
-          <div class="btns">
-            <div class="btn btn-re"></div>
-            <div class="btn btn-copy"></div>
-            <div class="btn btn-play"></div>
+    <div ref="chatBox" class="chat-box">
+      <template v-for="(item, i) in state.messages">
+        <div v-if="item.pos === 'left'" class="item left">
+          <div class="content">
+            <div class="message" v-html="item.content"></div>
+            <div class="btns">
+              <div @click="re(item, i)" class="btn btn-re"></div>
+              <div @click="copy(item.raw)" class="btn btn-copy"></div>
+              <div @click="tts(item.raw)" class="btn btn-play"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="item right">
-        <div class="content">
-          <div class="imgs">
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-            <div class="img"></div>
-          </div>
-          <div class="message">
-            测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容
-            测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容
-            测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容测试内容
-          </div>
-          <div class="btns">
-            <div class="btn btn-copy"></div>
+        <div v-if="item.pos === 'right'" class="item right">
+          <div class="content">
+            <div v-if="item.files.length > 0" class="imgs">
+              <div v-for="img in item.files" class="img"></div>
+            </div>
+            <div class="message" v-html="item.content"></div>
+            <div class="btns">
+              <div @click="copy(item.raw)" class="btn btn-copy"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
     <div v-if="hasImgs" class="img-box">
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
-      </div>
-      <div class="img">
-        <div class="close"></div>
+      <div v-for="(item, i) in data.state.imgs" class="img">
+        <div @click="removeImg(i)" class="close"></div>
+        <img :src="item" />
       </div>
     </div>
     <div class="input-box">
-      <textarea spellcheck="false" class="input"></textarea>
+      <textarea
+        v-model="data.state.input"
+        @keydown="handleKeydown"
+        spellcheck="false"
+        class="input"></textarea>
       <div class="btns">
-        <div class="icon icon-speech"></div>
-        <div class="icon icon-upload"></div>
-        <div class="icon icon-send"></div>
+        <input ref="file" type="file" multiple @change="handleFileChange" class="file" />
+        <div @click="asr" class="icon icon-speech" :class="{ active: state.recording }"></div>
+        <div @click="upload" class="icon icon-upload"></div>
+        <div @click="submit" class="icon icon-send"></div>
       </div>
     </div>
   </div>
@@ -97,14 +61,29 @@
 </template>
 
 <script setup>
-  import { computed, reactive } from 'vue'
+  import { computed, onMounted, reactive, useTemplateRef } from 'vue'
+  import { ElMessage } from 'element-plus'
+  import { fetchEventSource } from '@microsoft/fetch-event-source'
+  import { marked } from 'marked'
+  import { useRecorder } from '@renderer/hooks/useRecorder'
   import { useDataStore } from '@renderer/stores/portable/data'
+  import { useAxios } from '@renderer/hooks/useAxios'
 
   const state = reactive({
+    messages: [],
     showClear: false,
+    recording: false,
+    fileRef: useTemplateRef('file'),
+    chatBoxRef: useTemplateRef('chatBox'),
   })
 
+  const http = useAxios()
+  const recorder = useRecorder()
   const data = useDataStore()
+
+  onMounted(() => {
+    submit()
+  })
 
   const hasImgs = computed(() => data.state.imgs.length > 0)
 
@@ -116,7 +95,191 @@
     electron.ipcRenderer.send('close')
   }
 
-  const clear = () => {}
+  const clear = () => {
+    state.messages = []
+    data.state.input = ''
+    data.state.imgs = []
+    data.state.files = []
+    data.state.upfiles = []
+    state.showClear = false
+  }
+
+  const removeImg = i => {
+    data.state.imgs.splice(i, 1)
+    data.state.files.splice(i, 1)
+  }
+
+  const upload = () => {
+    state.fileRef.click()
+  }
+
+  const handleFileChange = () => {
+    data.state.imgs = []
+    data.state.files = []
+    const files = state.fileRef.files
+    data.state.files = Array.from(files)
+    for (const file of files) {
+      const url = URL.createObjectURL(file)
+      data.state.imgs.push(url)
+    }
+  }
+
+  const copy = async text => {
+    await navigator.clipboard.writeText(text)
+    ElMessage.success('复制成功')
+  }
+
+  const tts = content => {
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel()
+    } else {
+      const msg = new SpeechSynthesisUtterance(content)
+      speechSynthesis.speak(msg)
+    }
+  }
+
+  const asr = async () => {
+    if (!state.recording) {
+      recorder.start(
+        () => {
+          ElMessage.success('正在收音...')
+          state.recording = true
+        },
+        () => {
+          state.status = ''
+          ElMessage.error('收音失败')
+          state.recording = false
+        },
+      )
+    } else {
+      const res = await recorder.getResult()
+      data.state.input = res.data[0].text
+      ElMessage.success('停止收音...')
+      state.recording = false
+    }
+  }
+
+  const re = async (item, i) => {
+    const q = state.messages[i - 1]
+    const query = q.content
+    let result = ''
+    const base = localStorage.getItem('base')
+    const url = `${base}/api/chat`
+    const ctrl = new AbortController()
+    await fetchEventSource(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query, type: 'ocr', upfiles: q.files }),
+      signal: ctrl.signal,
+      async onopen(e) {
+        if (e.ok) {
+          state.input = ''
+          console.log('✅ SSE opened')
+        } else {
+          throw new Error(await e.text())
+        }
+      },
+      async onmessage(e) {
+        try {
+          const chunk = JSON.parse(e.data)
+          result += chunk.answer || ''
+          result = result.replace(/<think>[\s\S]*?<\/think>/g, '')
+          item.raw = result
+          item.content = marked.parse(result)
+          state.chatBoxRef.scrollTo({
+            top: state.chatBoxRef.scrollHeight,
+            behavior: 'smooth',
+          })
+        } catch (e) {}
+      },
+      onerror(err) {
+        console.error(err)
+        ctrl.abort()
+      },
+      onclose() {
+        console.log('🔚 SSE closed')
+      },
+    })
+  }
+
+  const handleKeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submit()
+    }
+  }
+
+  const submit = async () => {
+    if (data.state.input.trim() === '') {
+      return
+    }
+
+    let base = localStorage.getItem('base')
+    let url = `${base}/api/upload`
+
+    const formData = new FormData()
+    data.state.files.forEach(file => {
+      formData.append('files', file)
+    })
+    const res = await http.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    data.state.upfiles = res.data.data
+
+    state.messages.push({
+      pos: 'right',
+      content: data.state.input,
+      raw: data.state.input,
+      files: data.state.upfiles,
+    })
+    const msg = reactive({
+      pos: 'left',
+      content: '',
+      raw: '',
+    })
+    state.messages.push(msg)
+
+    let result = ''
+    base = localStorage.getItem('base')
+    url = `${base}/api/chat`
+    const ctrl = new AbortController()
+    await fetchEventSource(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: data.state.input, type: 'ocr', upfiles: data.state.upfiles }),
+      signal: ctrl.signal,
+      async onopen(e) {
+        if (e.ok) {
+          data.state.input = ''
+          console.log('✅ SSE opened')
+        } else {
+          throw new Error(await e.text())
+        }
+      },
+      async onmessage(e) {
+        try {
+          const chunk = JSON.parse(e.data)
+          result += chunk.answer || ''
+          result = result.replace(/<think>[\s\S]*?<\/think>/g, '')
+          msg.raw = result
+          msg.content = marked.parse(result)
+          state.chatBoxRef.scrollTo({
+            top: state.chatBoxRef.scrollHeight,
+            behavior: 'smooth',
+          })
+        } catch (e) {}
+      },
+      onerror(err) {
+        console.error(err)
+        ctrl.abort()
+      },
+      onclose() {
+        console.log('🔚 SSE closed')
+      },
+    })
+  }
 </script>
 
 <style lang="scss" scoped>
@@ -133,6 +296,11 @@
       position: relative;
       &:first-child {
         margin-left: 0;
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .close {
         width: 7px;
@@ -260,7 +428,8 @@
           }
         }
         .message {
-          padding: 10px;
+          font-size: 14px;
+          padding: 10px 10px;
           background: rgba(31, 29, 39, 0.8);
           border-radius: 15px;
           color: #ffffff;
@@ -337,6 +506,11 @@
       display: flex;
       justify-content: flex-end;
       margin-right: 10px;
+      .file {
+        width: 0;
+        height: 0;
+        opacity: 0;
+      }
       .icon {
         width: 22px;
         height: 22px;
@@ -346,7 +520,8 @@
       .icon-speech {
         background: url('@renderer/assets/images/index-icon-speech.png') no-repeat center center /
           100% 100%;
-        &:hover {
+        &:hover,
+        &.active {
           background: url('@renderer/assets/images/index-icon-speech-hover.png') no-repeat center
             center / 100% 100%;
         }

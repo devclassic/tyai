@@ -9,17 +9,22 @@
         </div>
       </div>
       <div class="right">
-        <textarea ref="input" v-model="text" spellcheck="false" class="input"></textarea>
+        <textarea
+          ref="input"
+          v-model="data.state.input"
+          @keydown="handleKeydown"
+          spellcheck="false"
+          class="input"></textarea>
         <div class="btns">
           <div class="btn-group">
-            <div class="btn">内容分析</div>
-            <div class="btn">翻译</div>
+            <div @click="analysis" class="btn">内容分析</div>
+            <div @click="translate" class="btn">翻译</div>
           </div>
           <div class="btn-group">
             <input ref="file" type="file" @change="handleFileChange" multiple class="file" />
-            <div class="icon icon-speech"></div>
+            <div @click="asr" class="icon icon-speech" :class="{ active: state.recording }"></div>
             <div @click="upload" class="icon icon-upload"></div>
-            <div class="icon icon-send"></div>
+            <div @click="submit" class="icon icon-send"></div>
           </div>
         </div>
       </div>
@@ -29,12 +34,19 @@
 
 <script setup>
   import { useDataStore } from '@renderer/stores/portable/data'
-  import { computed, useTemplateRef, nextTick, ref, watch, watchEffect } from 'vue'
+  import { computed, useTemplateRef, nextTick, ref, watch, watchEffect, reactive } from 'vue'
+  import { ElMessage } from 'element-plus'
+  import { useRecorder } from '@renderer/hooks/useRecorder'
+  import { useRouter } from 'vue-router'
 
+  const state = reactive({
+    recording: false,
+  })
+
+  const router = useRouter()
+  const recorder = useRecorder()
   const data = useDataStore()
   const inputRef = useTemplateRef('input')
-
-  const text = ref('')
 
   let mirror = null
   nextTick(() => {
@@ -61,11 +73,11 @@
   const visualRows = ref(0)
 
   watch(
-    text,
+    () => data.state.input,
     () => {
       nextTick(() => {
         if (!mirror) return
-        mirror.textContent = text.value || ' '
+        mirror.textContent = data.state.input || ' '
         const h = mirror.offsetHeight
         visualRows.value = Math.round(h / 22)
       })
@@ -106,6 +118,27 @@
     fileRef.value.click()
   }
 
+  const asr = async () => {
+    if (!state.recording) {
+      recorder.start(
+        () => {
+          ElMessage.success('正在收音...')
+          state.recording = true
+        },
+        () => {
+          state.status = ''
+          ElMessage.error('收音失败')
+          state.recording = false
+        },
+      )
+    } else {
+      const res = await recorder.getResult()
+      data.state.input = res.data[0].text
+      ElMessage.success('停止收音...')
+      state.recording = false
+    }
+  }
+
   const handleFileChange = () => {
     data.state.imgs = []
     data.state.files = []
@@ -115,6 +148,31 @@
       const url = URL.createObjectURL(file)
       data.state.imgs.push(url)
     }
+  }
+
+  const handleKeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submit()
+    }
+  }
+
+  const submit = () => {
+    if (!data.state.input.trim()) return
+    electron.ipcRenderer.send('resize-portable', { width: 660, height: 485 })
+    router.push('/chat')
+  }
+
+  const analysis = () => {
+    data.state.input = '请详细分析并总结'
+    electron.ipcRenderer.send('resize-portable', { width: 660, height: 485 })
+    router.push('/chat')
+  }
+
+  const translate = () => {
+    data.state.input = '请将内容翻译为中文并总结'
+    electron.ipcRenderer.send('resize-portable', { width: 660, height: 485 })
+    router.push('/chat')
   }
 
   const removeImg = i => {
@@ -143,7 +201,7 @@
     const items = JSON.parse(json)
     items.forEach(async item => {
       if (item.type === 'text') {
-        text.value += item.payload + '\n\n'
+        data.state.input += item.payload + '\n\n'
       } else if (item.type === 'image') {
         const base64 = await electron.ipcRenderer.invoke('read-local-image', item.payload)
         data.state.imgs.push(base64)
@@ -151,6 +209,18 @@
         data.state.files.push(file)
       }
     })
+  })
+
+  electron.ipcRenderer.send('portable-screenshot')
+
+  electron.ipcRenderer.on('screenshot', async (e, screenshot) => {
+    if (!screenshot) return
+    data.state.imgs = []
+    data.state.files = []
+    const base64 = await electron.ipcRenderer.invoke('read-local-image', screenshot)
+    data.state.imgs.push(base64)
+    const file = base64ToFile(base64, screenshot.split('\\').pop(), 'image/png')
+    data.state.files.push(file)
   })
 </script>
 
@@ -332,7 +402,8 @@
       .icon-speech {
         background: url('@renderer/assets/images/index-icon-speech.png') no-repeat center center /
           100% 100%;
-        &:hover {
+        &:hover,
+        &.active {
           background: url('@renderer/assets/images/index-icon-speech-hover.png') no-repeat center
             center / 100% 100%;
         }

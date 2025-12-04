@@ -58,8 +58,8 @@ const createMainWindow = () => {
 // 创建便携窗口
 const createPortableWindow = () => {
   const win = new BrowserWindow({
-    width: 660,
-    height: 485,
+    width: 630,
+    height: 145,
     show: false,
     frame: false,
     transparent: true,
@@ -73,13 +73,13 @@ const createPortableWindow = () => {
   })
 
   win.on('ready-to-show', async () => {
-    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/chat" }, 10)')
+    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/index" }, 10)')
     win.show()
   })
 
   const devurl = process.env['ELECTRON_RENDERER_URL']
   if (is.dev && devurl) {
-    win.loadURL(`${devurl}/portable.html#/chat`)
+    win.loadURL(`${devurl}/portable.html#/index`)
   } else {
     win.loadFile(join(__dirname, '../renderer/portable.html'))
   }
@@ -225,8 +225,17 @@ app.whenReady().then(() => {
 
   // 截图功能
   const screenshots = new Screenshots()
-  screenshots.on('ok', (e, buffer, bounds) => {
-    console.log('ok')
+  let screenshot = null
+  screenshots.on('ok', async (e, buffer, bounds) => {
+    const fname = `${Date.now()}.png`
+    const dir = path.join(__dirname, 'data/img')
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+    const fullPath = path.join(dir, fname)
+    await fs.writeFile(fullPath, buffer)
+    screenshot = fullPath
+    showPortableWindow()
   })
 
   // 全局快捷键
@@ -299,6 +308,7 @@ app.whenReady().then(() => {
 
   ipcMain.on('resize-portable', (e, size) => {
     portableWindow.setSize(size.width, size.height)
+    portableWindow.center()
   })
 
   let transJson = null
@@ -310,6 +320,11 @@ app.whenReady().then(() => {
   ipcMain.on('portable-ready', e => {
     portableWindow.webContents.send('load', transJson)
     transJson = null
+  })
+
+  ipcMain.on('portable-screenshot', e => {
+    portableWindow.webContents.send('screenshot', screenshot)
+    screenshot = null
   })
 
   ipcMain.on('download', async (e, url) => {
