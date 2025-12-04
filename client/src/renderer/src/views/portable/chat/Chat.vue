@@ -434,9 +434,14 @@
           border-radius: 15px;
           color: #ffffff;
           line-height: 1.5;
+          user-select: text;
           word-break: break-all;
+          overflow-wrap: break-word;
+          white-space: normal;
           * {
             word-break: break-all;
+            overflow-wrap: break-word;
+            white-space: normal;
           }
         }
         .btns {

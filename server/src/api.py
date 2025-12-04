@@ -11,6 +11,7 @@ from typing import List
 from funasr import AutoModel
 from openpyxl import Workbook
 import uuid
+import pypandoc
 
 router = APIRouter(prefix="/api")
 
@@ -40,6 +41,60 @@ async def asr(file: UploadFile = File()):
         item["text"] = item["text"].replace("幺", "1")
     res[0]["url"] = filename.replace("public/", "/")
     return {"success": True, "message": "语音识别成功", "data": res}
+
+
+@router.post("/doc")
+async def doc(file: UploadFile = File()):
+    dify_base_api = os.getenv("DIFY_BASE_API")
+
+    basepath = "public/uploads/img/"
+    if not os.path.exists(basepath):
+        os.makedirs(basepath)
+    ext = os.path.splitext(file.filename)[1]
+    filename = basepath + str(uuid.uuid4()) + ext
+    with open(filename, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    token = os.getenv("DIFY_OCR_TOKEN")
+    url = f"{dify_base_api}/files/upload"
+    headers = {
+        "Authorization": f"Bearer {token}",
+    }
+    data = {"user": "demo"}
+    with open(filename, "rb") as f:
+        async with httpx.AsyncClient(timeout=None) as client:
+            res = await client.post(
+                url,
+                headers=headers,
+                data=data,
+                files={"file": (os.path.basename(file.filename), f)},
+            )
+            id = res.json().get("id")
+
+    url = f"{dify_base_api}/chat-messages"
+    data = {
+        "user": "demo",
+        "inputs": {},
+        "query": "请识别并总结并以markdown格式输出，只输出makdown。",
+        "response_mode": "blocking",
+        "files": [
+            {
+                "type": "image",
+                "transfer_method": "local_file",
+                "upload_file_id": id,
+            }
+        ],
+    }
+    async with httpx.AsyncClient(timeout=None) as client:
+        res = await client.post(url, json=data, headers=headers)
+    md = res.json().get("answer")
+    basepath = "public/uploads/doc/"
+    if not os.path.exists(basepath):
+        os.makedirs(basepath)
+    filename = basepath + str(uuid.uuid4()) + ".docx"
+    pypandoc.convert_text(md, "docx", format="md", outputfile=filename)
+    path = filename.replace("public/", "/")
+    return {"success": True, "message": "获取响应成功", "data": path}
 
 
 @router.post("/types/all")
@@ -235,7 +290,7 @@ async def export_data(request: Request):
     ws = wb.active
     for r in rows:
         ws.append(r)
-        
+
     path = "public/uploads/exports"
     os.makedirs(path, exist_ok=True)
     filename = f"{path}/{uuid.uuid4()}.xlsx"

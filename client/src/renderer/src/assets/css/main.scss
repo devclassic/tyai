@@ -11,8 +11,12 @@ body {
 
 .chat-box .text {
   word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: normal;
   * {
     word-break: break-all;
+    overflow-wrap: break-word;
+    white-space: normal;
   }
 }
 

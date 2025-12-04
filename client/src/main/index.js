@@ -227,6 +227,8 @@ app.whenReady().then(() => {
   const screenshots = new Screenshots()
   let screenshot = null
   screenshots.on('ok', async (e, buffer, bounds) => {
+    if (clipboardWindow) clipboardWindow.close()
+    if (portableWindow) portableWindow.close()
     const fname = `${Date.now()}.png`
     const dir = path.join(__dirname, 'data/img')
     if (!fs.existsSync(dir)) {

@@ -51,12 +51,15 @@
 <script setup>
   import { reactive } from 'vue'
   import { format } from 'date-fns'
+  import { useAxios } from '@renderer/hooks/useAxios'
 
   const state = reactive({
     history: [],
     isMulti: false,
     showClear: false,
   })
+
+  const http = useAxios()
 
   const getHistory = async () => {
     state.history = await electron.ipcRenderer.invoke('get-history')
@@ -110,8 +113,19 @@
     }
   }
 
-  const toDoc = () => {
-    document.title = '灵犀板'
+  const base64ToFile = (base64String, fileName, mimeType) => {
+    const byteCharacters = atob(base64String.split(',')[1])
+    const byteNumbers = new Array(byteCharacters.length)
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i)
+    }
+    const byteArray = new Uint8Array(byteNumbers)
+    const blob = new Blob([byteArray], { type: mimeType })
+    const file = new File([blob], fileName, { type: mimeType })
+    return file
+  }
+
+  const toDoc = async () => {
     const items = state.history.filter(item => item.check)
     if (items.length === 0) {
       electron.ipcRenderer.send('show-alert', {
@@ -133,6 +147,15 @@
       return
     }
     const item = items[0]
+    const base64 = await electron.ipcRenderer.invoke('read-local-image', item.payload)
+    const file = base64ToFile(base64, 'image.png', 'image/png')
+    let base = localStorage.getItem('base')
+    let url = `${base}/api/doc`
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await http.post(url, formData)
+    url = base + res.data.data
+    electron.ipcRenderer.send('download', url)
   }
 
   const toPortable = () => {
