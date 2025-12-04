@@ -1,5 +1,8 @@
 .venv
 __pycache__
+build
+dist
 models
 public/uploads
 data
+main.spec

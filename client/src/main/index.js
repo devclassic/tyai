@@ -58,8 +58,8 @@ const createMainWindow = () => {
 // 创建便携窗口
 const createPortableWindow = () => {
   const win = new BrowserWindow({
-    width: 630,
-    height: 145,
+    width: 660,
+    height: 485,
     show: false,
     frame: false,
     transparent: true,
@@ -73,13 +73,13 @@ const createPortableWindow = () => {
   })
 
   win.on('ready-to-show', async () => {
-    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/index" }, 10)')
+    await win.webContents.executeJavaScript('setTimeout(() => { location.hash = "#/chat" }, 10)')
     win.show()
   })
 
   const devurl = process.env['ELECTRON_RENDERER_URL']
   if (is.dev && devurl) {
-    win.loadURL(`${devurl}/portable.html#/index`)
+    win.loadURL(`${devurl}/portable.html#/chat`)
   } else {
     win.loadFile(join(__dirname, '../renderer/portable.html'))
   }

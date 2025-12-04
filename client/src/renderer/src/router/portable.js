@@ -8,8 +8,8 @@ const router = createRouter({
       component: () => import('@renderer/views/portable/index/Index.vue'),
     },
     {
-      path: '/about',
-      component: () => import('@renderer/views/portable/about/About.vue'),
+      path: '/chat',
+      component: () => import('@renderer/views/portable/chat/Chat.vue'),
     },
     {
       path: '/clipboard',
