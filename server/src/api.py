@@ -12,7 +12,6 @@ from funasr import AutoModel
 from openpyxl import Workbook
 import uuid
 import pypandoc
-import re
 
 router = APIRouter(prefix="/api")
 
@@ -89,7 +88,7 @@ async def doc(file: UploadFile = File()):
     async with httpx.AsyncClient(timeout=None) as client:
         res = await client.post(url, json=data, headers=headers)
     md = res.json().get("answer")
-    md = re.sub(r"^```(?:markdown)?\n|\n```$", "", md, flags=re.I)
+    md = md.replace("```markdown", "").replace("```", "")
     basepath = "public/uploads/doc/"
     if not os.path.exists(basepath):
         os.makedirs(basepath)
