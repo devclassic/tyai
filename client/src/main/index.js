@@ -188,7 +188,9 @@ const readClip = () => {
       record.type = 'image'
       record.hash = h
       const fname = `${Date.now()}.png`
-      const dir = path.join(__dirname, 'data/img')
+      const dir = path
+        .join(__dirname, '../../resources/img')
+        .replace('app.asar', 'app.asar.unpacked')
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
       }
@@ -230,7 +232,7 @@ app.whenReady().then(() => {
     if (clipboardWindow) clipboardWindow.close()
     if (portableWindow) portableWindow.close()
     const fname = `${Date.now()}.png`
-    const dir = path.join(__dirname, 'data/img')
+    const dir = path.join(__dirname, '../../resources/img').replace('app.asar', 'app.asar.unpacked')
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
