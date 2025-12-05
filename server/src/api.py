@@ -87,7 +87,7 @@ async def doc(file: UploadFile = File()):
     }
     async with httpx.AsyncClient(timeout=None) as client:
         res = await client.post(url, json=data, headers=headers)
-    md = res.json().get("answer")
+    md = res.json().get("answer", "")
     md = md.replace("```markdown", "").replace("```", "")
     basepath = "public/uploads/doc/"
     if not os.path.exists(basepath):
