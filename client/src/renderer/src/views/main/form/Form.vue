@@ -388,7 +388,7 @@
     })
     const base = localStorage.getItem('base')
     const url = base + res.data.data
-    electron.ipcRenderer.send('download', url)
+    electron.ipcRenderer.send('download', url, true)
   }
 </script>
 

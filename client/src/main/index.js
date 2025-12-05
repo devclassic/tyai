@@ -329,7 +329,7 @@ app.whenReady().then(() => {
     screenshot = null
   })
 
-  ipcMain.on('download', async (e, url) => {
+  ipcMain.on('download', async (e, url, open = false) => {
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
       defaultPath: basename(url),
     })
@@ -339,7 +339,7 @@ app.whenReady().then(() => {
       item.setSavePath(filePath)
       item.once('done', async (e, state) => {
         if (state === 'completed') {
-          shell.openPath(dirname(filePath))
+          shell.openPath(open ? filePath : dirname(filePath))
         }
       })
     })
