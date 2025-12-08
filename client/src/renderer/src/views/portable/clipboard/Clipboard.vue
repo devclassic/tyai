@@ -31,7 +31,7 @@
         </template>
       </div>
       <div class="btns">
-        <div @click="toDoc" class="btn btn-doc">生成文档</div>
+        <div @click="toDoc" class="btn btn-doc">{{ state.btnDocText }}</div>
         <div @click="state.showClear = true" class="btn btn-clear">清空记录</div>
         <div @click="toPortable" class="btn btn-ai">导入AI</div>
       </div>
@@ -57,6 +57,7 @@
     history: [],
     isMulti: false,
     showClear: false,
+    btnDocText: '生成文档',
   })
 
   const http = useAxios()
@@ -126,6 +127,7 @@
   }
 
   const toDoc = async () => {
+    if (state.btnDocText === '生成中...') return
     const items = state.history.filter(item => item.check)
     if (items.length === 0) {
       electron.ipcRenderer.send('show-alert', {
@@ -146,6 +148,7 @@
       })
       return
     }
+    state.btnDocText = '生成中...'
     const item = items[0]
     const base64 = await electron.ipcRenderer.invoke('read-local-image', item.payload)
     const file = base64ToFile(base64, 'image.png', 'image/png')
@@ -156,6 +159,7 @@
     const res = await http.post(url, formData)
     url = base + res.data.data
     electron.ipcRenderer.send('download', url, true)
+    state.btnDocText = '生成文档'
   }
 
   const toPortable = () => {
