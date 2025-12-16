@@ -48,6 +48,7 @@ img_processor = Sam3Processor(model)
 video_predictor = build_sam3_video_predictor(
     checkpoint_path=checkpoint_path,
     bpe_path=bpe_path,
+    gpus_to_use=[torch.cuda.current_device()],
 )
 
 app = FastAPI()
