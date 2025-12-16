@@ -106,13 +106,13 @@
       input.value = ''
     } else {
       state.url = state.backupUrl
+      state.showBack = false
+      input.value = ''
     }
   }
 
   const back = () => {
     close()
-    state.showBack = false
-    input.value = ''
   }
 
   const asr = async () => {
