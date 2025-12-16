@@ -42,6 +42,10 @@
       <div class="icon icon-5"></div>
       <div class="text">文档分析</div>
     </div>
+    <div @click="router.push('/label')" class="item" :class="{ active: route.path === '/label' }">
+      <div class="icon icon-9"></div>
+      <div class="text">视觉分割</div>
+    </div>
     <div class="line"></div>
     <div class="type">个人中心</div>
     <div class="item">
@@ -63,10 +67,10 @@
       <el-form-item label="应用名称">
         <el-input v-model="settingsStore.title" placeholder="请输入应用名称" />
       </el-form-item>
-      <el-form-item label="服务地址">
-        <el-select v-model="settingsStore.base" placeholder="请选择服务地址">
-          <el-option label="http://localhost:7800" value="http://localhost:7800" />
-          <el-option label="https://client.epoint.ink" value="https://client.epoint.ink" />
+      <el-form-item label="服务模式">
+        <el-select v-model="state.mode" placeholder="请选择服务模式">
+          <el-option label="测试模式" value="test" />
+          <el-option label="线上模式" value="online" />
         </el-select>
       </el-form-item>
     </el-form>
@@ -88,11 +92,22 @@
   const state = reactive({
     showItem2: false,
     showSettings: false,
+    mode: '',
   })
 
   const settingsStore = useSettingsStore()
   settingsStore.title = localStorage.getItem('title')
   settingsStore.base = localStorage.getItem('base')
+  settingsStore.baseSam3 = localStorage.getItem('baseSam3')
+
+  switch (settingsStore.base) {
+    case 'http://localhost:7800':
+      state.mode = 'test'
+      break
+    case 'https://client.epoint.ink':
+      state.mode = 'online'
+      break
+  }
 
   const router = useRouter()
   const route = useRoute()
@@ -116,7 +131,16 @@
 
   const saveSettings = () => {
     localStorage.setItem('title', settingsStore.title)
-    localStorage.setItem('base', settingsStore.base)
+    switch (state.mode) {
+      case 'test':
+        localStorage.setItem('base', 'http://localhost:7800')
+        localStorage.setItem('baseSam3', 'http://localhost:7801')
+        break
+      case 'online':
+        localStorage.setItem('base', 'https://client.epoint.ink')
+        localStorage.setItem('baseSam3', 'https://sam3.epoint.ink')
+        break
+    }
     state.showSettings = false
   }
 </script>
@@ -207,6 +231,10 @@
           background: url('@renderer/assets/images/menu-icon-8.png') no-repeat center center / 100%
             100%;
         }
+        &.icon-9 {
+          background: url('@renderer/assets/images/menu-icon-9.png') no-repeat center center / 100%
+            100%;
+        }
         &.icon-down {
           width: 11px;
           height: 6px;
@@ -254,6 +282,10 @@
         }
         & .icon-8 {
           background: url('@renderer/assets/images/menu-icon-8-hover.png') no-repeat center center /
+            100% 100%;
+        }
+        & .icon-9 {
+          background: url('@renderer/assets/images/menu-icon-9-hover.png') no-repeat center center /
             100% 100%;
         }
         & .icon-down {

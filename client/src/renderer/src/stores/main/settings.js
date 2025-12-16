@@ -5,6 +5,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const state = reactive({
     title: '',
     base: '',
+    baseSam3: '',
   })
   return state
 })

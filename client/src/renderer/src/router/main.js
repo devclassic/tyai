@@ -10,6 +10,7 @@ const router = createRouter({
     { path: '/doc', component: () => import('../views/main/doc/Doc.vue') },
     { path: '/ocr', component: () => import('../views/main/ocr/Ocr.vue') },
     { path: '/docs', component: () => import('../views/main/docs/Docs.vue') },
+    { path: '/label', component: () => import('../views/main/label/Label.vue') },
   ],
 })
 
