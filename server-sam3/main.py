@@ -1,6 +1,6 @@
+import os
 import torch
 import cv2
-import os
 import shutil
 import uuid
 import httpx
@@ -35,15 +35,14 @@ plt.ioff()
 
 checkpoint_path = "models/sam3.pt"
 bpe_path = "models/bpe_simple_vocab_16e6.txt.gz"
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
 model = build_sam3_image_model(
     checkpoint_path=checkpoint_path,
     bpe_path=bpe_path,
     device=device,
 )
 img_processor = Sam3Processor(model)
-
 
 video_predictor = build_sam3_video_predictor(
     checkpoint_path=checkpoint_path,
@@ -113,6 +112,12 @@ async def test():
 
         return annotated_image
 
+    model = build_sam3_image_model(
+        checkpoint_path=checkpoint_path,
+        bpe_path=bpe_path,
+        device=device,
+    )
+    img_processor = Sam3Processor(model)
     image = Image.open("public/test.jpg").convert("RGB")
     inference_state = img_processor.set_image(image)
     output = img_processor.set_text_prompt(state=inference_state, prompt="bottle cap")
@@ -419,7 +424,7 @@ async def video(file: UploadFile = File(), query: str = Form(...)):
             session_id=session_id,
         )
     )
-    video_predictor.shutdown()
+    # video_predictor.shutdown()
 
     print(f"视频生成完成，成功处理 {processed_count} 帧")
     print(f"分割视频已保存到: {output_video_path}")
@@ -430,8 +435,6 @@ async def video(file: UploadFile = File(), query: str = Form(...)):
 app.mount("/", StaticFiles(directory="public"))
 
 if __name__ == "__main__":
-    import multiprocessing
     import uvicorn
 
-    multiprocessing.freeze_support()
     uvicorn.run(app, host="0.0.0.0", port=7801)
