@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-  import { reactive, computed, useTemplateRef } from 'vue'
+  import { reactive, computed, useTemplateRef, nextTick } from 'vue'
   import { useTextareaAutosize } from '@vueuse/core'
   import { ElMessage, ElLoading } from 'element-plus'
   import { useAxios } from '@renderer/hooks/useAxios'
@@ -174,6 +174,7 @@
     formData.append('query', input.value)
     const res = await http.post(url, formData)
     state.url = base + res.data.data
+    await nextTick()
     loading.close()
   }
 </script>
