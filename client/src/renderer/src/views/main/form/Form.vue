@@ -24,7 +24,7 @@
         <div class="status">{{ state.status }}</div>
       </div>
       <div class="form-title">
-        {{ state.types.find(item => item.id === state.currentTypeId)?.name }}
+        {{ name }}
       </div>
       <div class="form">
         <template v-for="item in state.formItems">
@@ -56,6 +56,8 @@
         <div @click="handleOpt" class="btn btn-opt"></div>
         <div @click="state.fileRef.click()" class="btn btn-upload"></div>
         <div @click="handleDownload" class="btn btn-download"></div>
+        <div v-if="name === 'RPA表单'" @click="handleData" class="btn btn-data"></div>
+        <div v-if="name === 'RPA表单'" @click="handleRPA" class="btn btn-rpa"></div>
       </div>
     </div>
   </div>
@@ -171,6 +173,7 @@
     formItems: [],
     items: [],
     recording: false,
+    json: '',
     fileRef: useTemplateRef('file'),
   })
 
@@ -178,6 +181,10 @@
 
   const http = useAxios()
   const recorder = useRecorder()
+
+  const name = computed(() => {
+    return state.types.find(item => item.id === state.currentTypeId)?.name
+  })
 
   const getTypes = async () => {
     const res = await http.post('/api/types/all', { type: 'form' })
@@ -389,6 +396,42 @@
     const base = localStorage.getItem('base')
     const url = base + res.data.data
     electron.ipcRenderer.send('download', url, true)
+  }
+
+  const handleData = () => {
+    const data = {
+      姓名: '姓名',
+      性别: '性别',
+      年龄: '年龄',
+      电话: '电话',
+      就诊时间: '就诊时间',
+      科室: '科室',
+      接诊医生: '接诊医生',
+      地址: '地址',
+      主诉: '主诉',
+      现病史: '现病史',
+      既往史: '既往史',
+      过敏史: '过敏史',
+      家族史: '家族史',
+      体格检查: '体格检查',
+      专科检查: '专科检查',
+      辅助检查: '辅助检查',
+      初步诊断: '初步诊断',
+      鉴别诊断: '鉴别诊断',
+      治疗目的: '治疗目的',
+      健康教育: '健康教育',
+    }
+    for (const item of state.formItems) {
+      item.value = data[item.name]
+    }
+  }
+
+  const handleRPA = async () => {
+    const data = {}
+    for (const item of state.formItems) {
+      data[item.name] = item.value
+    }
+    electron.ipcRenderer.send('rpa', JSON.stringify(data))
   }
 </script>
 
@@ -632,6 +675,20 @@
       .btn-download:hover {
         background: url('@renderer/assets/images/form-btn-download-hover.png') no-repeat center
           center / 100% 100%;
+      }
+      .btn-data {
+        background: url('@renderer/assets/images/btn-data.png') no-repeat center center / 100% 100%;
+      }
+      .btn-data:hover {
+        background: url('@renderer/assets/images/btn-data-hover.png') no-repeat center center / 100%
+          100%;
+      }
+      .btn-rpa {
+        background: url('@renderer/assets/images/btn-rpa.png') no-repeat center center / 100% 100%;
+      }
+      .btn-rpa:hover {
+        background: url('@renderer/assets/images/btn-rpa-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }

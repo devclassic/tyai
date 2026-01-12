@@ -16,6 +16,7 @@ import Screenshots from 'electron-screenshots'
 import crypto from 'crypto'
 import fs from 'fs-extra'
 import { v4 as uuidv4 } from 'uuid'
+import { chromium } from 'playwright'
 import icon from '../../resources/icon.png?asset'
 
 // 创建主窗口
@@ -346,6 +347,61 @@ app.whenReady().then(() => {
       })
     })
     ses.downloadURL(url)
+  })
+
+  ipcMain.on('rpa', async (e, json) => {
+    const data = JSON.parse(json)
+    const browser = await chromium.launch({ channel: 'chrome', headless: false })
+    const page = await browser.newPage()
+    await page.goto('https://yl.epoint.ink')
+    let link = await page.waitForSelector('a[data-v-63259b8e]')
+    await link.click()
+    link = page.locator('.menu-item').nth(2)
+    await link.click()
+
+    const inputs = page.locator('input[type="text"]')
+    let input = inputs.nth(0)
+    await input.fill(data['姓名'])
+    input = inputs.nth(1)
+    await input.fill(data['就诊时间'])
+    input = inputs.nth(2)
+    await input.fill(data['性别'])
+    input = inputs.nth(3)
+    await input.fill(data['科室'])
+    input = inputs.nth(4)
+    await input.fill(data['年龄'])
+    input = inputs.nth(5)
+    await input.fill(data['接诊医生'])
+    input = inputs.nth(6)
+    await input.fill(data['电话'])
+    input = inputs.nth(7)
+    await input.fill(data['地址'])
+
+    const txts = page.locator('textarea')
+    input = txts.nth(0)
+    await input.fill(data['主诉'])
+    input = txts.nth(1)
+    await input.fill(data['现病史'])
+    input = txts.nth(2)
+    await input.fill(data['既往史'])
+    input = txts.nth(3)
+    await input.fill(data['过敏史'])
+    input = txts.nth(4)
+    await input.fill(data['家族史'])
+    input = txts.nth(5)
+    await input.fill(data['体格检查'])
+    input = txts.nth(6)
+    await input.fill(data['专科检查'])
+    input = txts.nth(7)
+    await input.fill(data['辅助检查'])
+    input = txts.nth(8)
+    await input.fill(data['初步诊断'])
+    input = txts.nth(9)
+    await input.fill(data['鉴别诊断'])
+    input = txts.nth(10)
+    await input.fill(data['治疗目的'])
+    input = txts.nth(11)
+    await input.fill(data['健康教育'])
   })
 
   // 系统托盘
