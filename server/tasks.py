@@ -8,4 +8,4 @@ def dev(c):
 
 @task
 def build(c):
-    c.run("pyinstaller -F --collect-all funasr --noupx main.py")
+    c.run("pyinstaller -F --noupx --collect-all funasr main.py")
