@@ -225,6 +225,7 @@
     query += `
       如果<内容>中没有相关信息，则输出的字段值为空字符串。
       输出的 JSON 中，所有的字段都必须包含在 JSON 中，不能省略。
+      只输出 JSON 格式的内容，不能输出其他任何内容。
       `
     state.status = '正在处理...'
     const res = await http.post('/api/chat2', { query })
