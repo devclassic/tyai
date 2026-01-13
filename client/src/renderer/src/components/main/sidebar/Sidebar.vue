@@ -1,6 +1,6 @@
 <template>
   <div class="sidebar">
-    <div class="logo">智能AI助手</div>
+    <div @click="toggleAudio" class="logo">{{ state.audioText }}</div>
     <div class="type">主要功能</div>
     <div
       @click="router.push('/knowledge')"
@@ -81,6 +81,7 @@
       </div>
     </template>
   </el-dialog>
+  <div id="audioContainer"></div>
 </template>
 
 <script setup>
@@ -88,12 +89,17 @@
   import { useRouter, useRoute } from 'vue-router'
   import { ElDialog, ElForm, ElFormItem, ElSelect, ElOption, ElInput } from 'element-plus'
   import { useSettingsStore } from '@renderer/stores/main/settings'
+  import { useAxios } from '@renderer/hooks/useAxios'
+  import { Room, RoomEvent, Track, VideoPresets } from 'livekit-client'
 
   const state = reactive({
+    audioText: '开启AI语音助手',
     showItem2: false,
     showSettings: false,
     mode: '',
   })
+
+  const http = useAxios()
 
   const settingsStore = useSettingsStore()
   settingsStore.title = localStorage.getItem('title')
@@ -143,6 +149,74 @@
     }
     state.showSettings = false
   }
+
+  let token = null
+  const url = 'wss://lk.epoint.ink'
+
+  const getToken = async () => {
+    try {
+      const res = await http.post('https://lktk.epoint.ink/token')
+      token = res.data.token
+    } catch (error) {
+      console.error('❌ 获取token失败:', error)
+      alert('获取token失败: ' + error.message)
+    }
+  }
+
+  let room = null
+  const toggleAudio = async () => {
+    const isopen = state.audioText === '开启AI语音助手'
+    state.audioText = isopen ? '正在开启...' : '正在关闭...'
+    if (isopen) {
+      const handleTrackSubscribed = (track, publication, participant) => {
+        if (track.kind === Track.Kind.Video || track.kind === Track.Kind.Audio) {
+          const element = track.attach()
+          document.querySelector('#audioContainer').appendChild(element)
+        }
+      }
+
+      const handleTrackUnsubscribed = (track, publication, participant) => {
+        track.detach()
+      }
+
+      const handleLocalTrackUnpublished = (publication, participant) => {
+        publication.track.detach()
+      }
+
+      const handleActiveSpeakerChange = speakers => {}
+
+      const handleDisconnect = () => {
+        console.log('disconnected from room')
+      }
+
+      room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: {
+          resolution: VideoPresets.h720.resolution,
+        },
+      })
+
+      await getToken()
+
+      room.prepareConnection(url, token)
+
+      room
+        .on(RoomEvent.TrackSubscribed, handleTrackSubscribed)
+        .on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed)
+        .on(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakerChange)
+        .on(RoomEvent.Disconnected, handleDisconnect)
+        .on(RoomEvent.LocalTrackUnpublished, handleLocalTrackUnpublished)
+
+      await room.connect(url, token)
+      console.log('connected to room', room.name)
+
+      await room.localParticipant.setMicrophoneEnabled(true)
+    } else {
+      room && room.disconnect()
+    }
+    state.audioText = state.audioText === '正在开启...' ? '关闭AI语音助手' : '开启AI语音助手'
+  }
 </script>
 
 <style lang="scss">
@@ -163,8 +237,10 @@
       line-height: 75px;
       text-align: center;
       border-bottom: 1px solid #8d8595;
-      font-size: 16px;
+      font-size: 14px;
       color: #625b71;
+      cursor: pointer;
+      app-region: no-drag;
     }
     .type {
       font-size: 12px;
