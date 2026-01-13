@@ -223,7 +223,7 @@
     query.trimEnd(',')
     query += '\n}\n'
     query += `
-      如果<内容>中没有相关信息，则输出空字符串。
+      如果<内容>中没有相关信息，则输出的字段值为空字符串。
       输出的 JSON 中，所有的字段都必须包含在 JSON 中，不能省略。
       `
     state.status = '正在处理...'
@@ -232,6 +232,8 @@
       .replace(/<think>[\s\S]*?<\/think>/g, '')
       .replace('```json', '')
       .replace('```', '')
+    console.log(text)
+    console.log(data)
     const json = JSON.parse(data)
     for (const item of state.formItems) {
       if (json[item.name]) {
