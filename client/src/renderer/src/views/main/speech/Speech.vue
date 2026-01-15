@@ -507,7 +507,8 @@
       text-align: center;
       font-size: 45px;
       color: #625b71;
-      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-title.png') no-repeat center center / 100%
+        100%;
       position: absolute;
       top: 5px;
       left: 50%;
@@ -516,7 +517,8 @@
     .btn-type {
       width: 90px;
       height: 27px;
-      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100% 100%;
+      background: url('@renderer/assets/images/header-btn-type.png') no-repeat center center / 100%
+        100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -530,8 +532,8 @@
     .btn-custom {
       width: 69px;
       height: 27px;
-      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/header-btn-custom.png') no-repeat center center /
+        100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -539,14 +541,14 @@
       left: 100px;
     }
     .btn-custom:hover {
-      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/header-btn-custom-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .btn-refresh {
       width: 60px;
       height: 27px;
-      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center / 100%
-        100%;
+      background: url('@renderer/assets/images/header-btn-refresh.png') no-repeat center center /
+        100% 100%;
       cursor: pointer;
       app-region: no-drag;
       position: absolute;
@@ -554,8 +556,8 @@
       right: 0px;
     }
     .btn-refresh:hover {
-      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center center /
-        100% 100%;
+      background: url('@renderer/assets/images/header-btn-refresh-hover.png') no-repeat center
+        center / 100% 100%;
     }
     .menu {
       width: 100%;
@@ -588,8 +590,8 @@
         .icon {
           width: 19px;
           height: 10px;
-          background: url('@renderer/assets/images/header-menu-icon-5.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/header-menu-icon-5.png') no-repeat center
+            center / 100% 100%;
         }
         .text {
           margin-left: 10px;
@@ -667,16 +669,16 @@
               cursor: pointer;
             }
             .tool1 {
-              background: url('@renderer/assets/images/msg-icon-1.png') no-repeat center center / 100%
-                100%;
+              background: url('@renderer/assets/images/msg-icon-1.png') no-repeat center center /
+                100% 100%;
             }
             .tool2 {
-              background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center / 100%
-                100%;
+              background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center /
+                100% 100%;
             }
             .tool3 {
-              background: url('@renderer/assets/images/msg-icon-3.png') no-repeat center center / 100%
-                100%;
+              background: url('@renderer/assets/images/msg-icon-3.png') no-repeat center center /
+                100% 100%;
             }
           }
         }
@@ -707,7 +709,8 @@
           cursor: pointer;
         }
         .tool2 {
-          background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center / 100% 100%;
+          background: url('@renderer/assets/images/msg-icon-2.png') no-repeat center center / 100%
+            100%;
         }
       }
     }
@@ -745,12 +748,12 @@
           cursor: pointer;
         }
         .btn-send {
-          background: url('@renderer/assets/images/input-btn-send.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/input-btn-send.png') no-repeat center center /
+            100% 100%;
         }
         .btn-send:hover {
-          background: url('@renderer/assets/images/input-btn-send-hover.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/input-btn-send-hover.png') no-repeat center
+            center / 100% 100%;
         }
       }
     }
@@ -802,8 +805,8 @@
           width: 77px;
           height: 30px;
           cursor: pointer;
-          background: url('@renderer/assets/images/input-btn-record.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/input-btn-record.png') no-repeat center center /
+            100% 100%;
         }
         .btn-record:hover,
         .btn-record.active {
@@ -814,13 +817,13 @@
           width: 65px;
           height: 30px;
           cursor: pointer;
-          background: url('@renderer/assets/images/input-btn-pause.png') no-repeat center center / 100%
-            100%;
+          background: url('@renderer/assets/images/input-btn-pause.png') no-repeat center center /
+            100% 100%;
         }
         .btn-pause:hover,
         .btn-pause.active {
-          background: url('@renderer/assets/images/input-btn-pause-hover.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/input-btn-pause-hover.png') no-repeat center
+            center / 100% 100%;
         }
         .btn-recover {
           width: 65px;
@@ -837,8 +840,8 @@
           width: 65px;
           height: 30px;
           cursor: pointer;
-          background: url('@renderer/assets/images/input-btn-complete.png') no-repeat center center /
-            100% 100%;
+          background: url('@renderer/assets/images/input-btn-complete.png') no-repeat center
+            center / 100% 100%;
         }
         .btn-complete:hover {
           background: url('@renderer/assets/images/input-btn-complete-hover.png') no-repeat center
@@ -856,13 +859,13 @@
       .btn-rename {
         width: 67px;
         height: 22px;
-        background: url('@renderer/assets/images/input-btn-rename.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/input-btn-rename.png') no-repeat center center /
+          100% 100%;
         cursor: pointer;
       }
       .btn-rename:hover {
-        background: url('@renderer/assets/images/input-btn-rename-hover.png') no-repeat center center /
-          100% 100%;
+        background: url('@renderer/assets/images/input-btn-rename-hover.png') no-repeat center
+          center / 100% 100%;
       }
     }
   }
@@ -891,12 +894,13 @@
       .type-btn-add {
         width: 65px;
         height: 30px;
-        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-add-type.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-add:hover {
-        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-add-type-hover.png') no-repeat center center /
+          100% 100%;
       }
     }
     .type-content {
@@ -949,12 +953,13 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .type-btn-ok {
         width: 65px;
@@ -964,7 +969,8 @@
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }
@@ -1023,12 +1029,13 @@
       .type-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .type-btn-cancel:hover {
-        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .type-btn-ok {
         width: 65px;
@@ -1038,7 +1045,8 @@
         margin-left: 10px;
       }
       .type-btn-ok:hover {
-        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }
@@ -1090,12 +1098,13 @@
       .rename-btn-cancel {
         width: 65px;
         height: 30px;
-        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-cancel.png') no-repeat center center / 100%
+          100%;
         cursor: pointer;
       }
       .rename-btn-cancel:hover {
-        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center / 100%
-          100%;
+        background: url('@renderer/assets/images/btn-cancel-hover.png') no-repeat center center /
+          100% 100%;
       }
       .rename-btn-ok {
         width: 65px;
@@ -1105,7 +1114,8 @@
         margin-left: 10px;
       }
       .rename-btn-ok:hover {
-        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100% 100%;
+        background: url('@renderer/assets/images/btn-ok-hover.png') no-repeat center center / 100%
+          100%;
       }
     }
   }
