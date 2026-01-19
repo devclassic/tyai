@@ -401,39 +401,10 @@
     electron.ipcRenderer.send('download', url, true)
   }
 
-  const handleData = () => {
-    const data = {
-      姓名: '姓名',
-      性别: '性别',
-      年龄: '年龄',
-      电话: '电话',
-      就诊时间: '就诊时间',
-      科室: '科室',
-      接诊医生: '接诊医生',
-      地址: '地址',
-      主诉: '主诉',
-      现病史: '现病史',
-      既往史: '既往史',
-      过敏史: '过敏史',
-      家族史: '家族史',
-      体格检查: '体格检查',
-      专科检查: '专科检查',
-      辅助检查: '辅助检查',
-      初步诊断: '初步诊断',
-      鉴别诊断: '鉴别诊断',
-      治疗目的: '治疗目的',
-      健康教育: '健康教育',
-    }
-    for (const item of state.formItems) {
-      item.value = data[item.name]
-    }
-  }
+  const handleData = () => {}
 
   const handleRPA = async () => {
     const data = {}
-    for (const item of state.formItems) {
-      data[item.name] = item.value
-    }
     electron.ipcRenderer.send('rpa', JSON.stringify(data))
   }
 </script>
