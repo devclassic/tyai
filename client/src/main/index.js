@@ -351,10 +351,13 @@ app.whenReady().then(() => {
 
   ipcMain.on('rpa', async (e, json) => {
     const data = JSON.parse(json)
-    const browser = await chromium.launch({ channel: 'chrome', headless: false })
+    const browser = await chromium.launch({
+      channel: 'chrome',
+      headless: false,
+    })
     const page = await browser.newPage()
     await page.goto('https://daqihui.com')
-    const login = await page.waitForSelector('._personalTopLoginBtn_1fp9j_58')
+    const login = await page.waitForSelector('._personalTopLoginBtn_tsvew_58')
     await login.click()
     const accountLogin = await page.waitForSelector('.next-tabs-tab:nth-child(2)')
     await accountLogin.click()
@@ -367,7 +370,7 @@ app.whenReady().then(() => {
 
     const popupPromise = page.waitForEvent('popup')
 
-    const workBtn = await page.waitForSelector('._personalGoWrapper_1fp9j_140')
+    const workBtn = await page.waitForSelector('._personalGoWrapper_tsvew_140')
     await workBtn.click()
 
     const mgrPage = await popupPromise
@@ -377,7 +380,8 @@ app.whenReady().then(() => {
     const nav3 = await mgrPage.waitForSelector('a:has-text("找供应商")')
     await nav3.click()
     const iframe = mgrPage.frameLocator('.universal-iframe.mta')
-    const search = iframe.locator('.ant-input.ant-input-lg')
+    const search = iframe.getByPlaceholder('请输入供应商名称、供货类目、产品名称等关键词搜索')
+    await search.click()
     await search.fill('端点科技')
     const searchBtn = iframe.locator('button:has-text("搜 索")')
     await searchBtn.click()
